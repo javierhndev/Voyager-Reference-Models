@@ -3,5 +3,10 @@ This repository contains the necessary files or links to run a collection of mod
 
 ## Model list
 
-## Hello World!
-A simple 'Hello World!' example to run in Voyager.
+## Simple examples
+- ['Hello World!'](helloworld): simplest example to run in Voyager.
+- [Fashion-MNIST](TensorFlow/examples/Fashion-MNIST) model. It shows how to run a python script with TensorFlow. 
+
+## Natural Language processing
+
+## Generative models
