@@ -8,5 +8,5 @@ This repository contains the necessary files or links to run a collection of mod
 - [Fashion-MNIST](TensorFlow/examples/Fashion-MNIST) model. It shows how to run a python script with TensorFlow. 
 
 ## Natural Language processing
-
+- [BERT](Tensorflow/nlp/bert)
 ## Generative models
