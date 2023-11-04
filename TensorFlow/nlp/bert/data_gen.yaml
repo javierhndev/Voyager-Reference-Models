@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: Pod
+metadata:
+        name: datagen
+spec:
+        restartPolicy: Never
+        volumes:
+               - name: home
+                 hostPath:
+                       path: /home/youruser
+                       type: Directory
+               - name: scratch
+                 emptyDir: {}
+               - name: ceph
+                 hostPath:
+                        path: /voyager/ceph/users/youruser
+                        type: Directory
+        containers:
+                - name: gaudi-container
+                  image: vault.habana.ai/gaudi-docker/1.11.0/ubuntu22.04/habanalabs/tensorflow-installer-tf-cpu-2.12.1:latest
+                  volumeMounts:
+                         - mountPath: /home
+                           name: home
+                           readOnly: true
+                         - mountPath: /scratch
+                           name: scratch
+                         - mountPath: /voyager/ceph/users/youruser
+                           name: ceph 
+                  resources:
+                         limits:
+                                memory: 128G
+                                cpu: 4
+                                habana.ai/gaudi: 1
+                                hugepages-2Mi: 95000Mi
+                         requests:
+                                memory: 128G
+                                cpu: 4
+                                habana.ai/gaudi: 1
+                                hugepages-2Mi: 95000Mi
+                  command: ["/bin/sh","-c"]
+                  args:
+                    - hl-smi;
+                      export HOME=/scratch/tmp;
+                      cd /scratch;
+                      mkdir tmp;
+                      cd /home/models/Model-References/TensorFlow/nlp/bert/;
+                      export PYTHONPATH=$PYTHONPATH:/home/models/Model-References/:/home/models/Model-References/TensorFlow/nlp/bert/;
+                      export PYTHON=python3;
+                      $PYTHON -m pip install -r requirements.txt;
+                      cd /home/models/Model-References/TensorFlow/nlp/bert/data_preprocessing;
+                      pip install ipdb nltk progressbar html2text;
+                      bash create_datasets_from_start.sh;
