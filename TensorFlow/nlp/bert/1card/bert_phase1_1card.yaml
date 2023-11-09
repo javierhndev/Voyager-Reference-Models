@@ -1,0 +1,54 @@
+apiVersion: v1
+kind: Pod
+metadata:
+        name: bert1
+spec:
+        restartPolicy: Never
+        volumes:
+               - name: scratch
+                 emptyDir: {}
+               - name: ceph
+                 hostPath:
+                        path: /voyager/ceph/users/javierhn
+                        type: Directory
+        containers:
+                - name: gaudi-container
+                  image: vault.habana.ai/gaudi-docker/1.11.0/ubuntu22.04/habanalabs/tensorflow-installer-tf-cpu-2.12.1:latest
+                  volumeMounts:
+                         - mountPath: /scratch
+                           name: scratch
+                         - mountPath: /ceph
+                           name: ceph 
+                  resources:
+                         limits:
+                                memory: 64G
+                                cpu: 6
+                                habana.ai/gaudi: 1
+                                hugepages-2Mi: 95000Mi
+                         requests:
+                                memory: 64G
+                                cpu: 6
+                                habana.ai/gaudi: 1
+                                hugepages-2Mi: 95000Mi
+                  env:
+                    - name: input
+                      value: "/ceph/datasets/bert/books_wiki_en_corpus/tfrecord/seq_len_128/wikicorpus_en/training"
+                    - name: eval
+                      value: "/ceph/datasets/bert/books_wiki_en_corpus/tfrecord/seq_len_128/wikicorpus_en/test"
+                    - name: pretrain
+                      value: "/ceph/datasets/bert/pretrained/wwm_uncased_L-24_H-1024_A-16/bert_config.json"
+                    - name: output
+                      value: "/ceph/results/bert/phase_1_test"
+                  command: ["/bin/sh","-c"]
+                  args:
+                    - hl-smi;
+                      export HOME=/scratch/tmp;
+                      cd /scratch;
+                      mkdir -p tmp;
+                      git clone -b 1.11.0 https://github.com/HabanaAI/Model-References;
+                      cd Model-References/TensorFlow/nlp/bert/;
+                      export PYTHONPATH=/scratch/Model-References:/scratch/Model-References/TensorFlow/nlp/bert/:$PYTHONPATH;
+                      TF_BF16_CONVERSION=/scratch/Model-References/TensorFlow/nlp/bert/bf16_config/bert.json;
+                      pip install -r requirements.txt;
+                      python3 run_pretraining.py --input_files_dir=${input} --init_checkpoint= --eval_files_dir=${eval} --output_dir=${output} --bert_config_file=${pretrain} --do_train=True --do_eval=False --train_batch_size=64 --eval_batch_size=8 --max_seq_length=128 --max_predictions_per_seq=20 --num_train_steps=7038 --num_accumulation_steps=1024 --num_warmup_steps=2000 --save_checkpoints_steps=100  --learning_rate=0.006 --noamp --nouse_xla --allreduce_post_accumulation=True --dllog_path=/ceph/results/bert/phase_1/bert_dllog.json  --enable_scoped_allocator=False --resume=False;
+ 

@@ -58,3 +58,48 @@ Finally, to launch the pod:
 ```bash
 kubectl create -f data_gen.yaml 
 ```
+
+### Packing Pre-training Datasets
+*TO DO*
+
+Supported by Habana but not required to run on Voyager
+
+
+### Download Fine-tuning Datasets
+
+The MRPC dataset can be easily dowloaded using the `download_dataset.py`. Include as a paramter the folder you want to store the data. For example:
+``` bash
+python Model-References/TensorFlow/nlp/bert/download/download_dataset.py /voyager/ceph/users/youruser/datasets/bert/MRPC
+```
+Remeber to use this folder when runing the fine-tuning with the `run_classifier.py`.
+
+The v1.1 [SQuAD](https://rajpurkar.github.io/SQuAD-explorer/) dataset needs to be manually downloaded (we recommend to store it in your Ceph folder). To download the data, execute the following:
+
+```bash
+wget https://rajpurkar.github.io/SQuAD-explorer/dataset/train-v1.1.json
+wget https://rajpurkar.github.io/SQuAD-explorer/dataset/dev-v1.1.json
+```
+
+### Download the pretrained model
+Habana offers a pretrained model that can be used for fine-tuning. Even if you are not interested in the pretrained model you need to download it because you need the `bert_config.json` to (pre)train your model.
+
+Download the BERT Large pretrained model using our `pretrained.yaml` file. Change the *output* variable to your own folder.
+
+## Training
+### Single Card
+
+- The pretraining of Phase 1 of the BERT Large can be done using the `bert_phase1_1card.yaml` in the *1card* folder.Launch the pod with
+  ```bash
+  kubectl create -f bert_phase1_1card.yaml
+  ```   
+  Remeber to change the *dataset, pretrained parameters* and *output* folder tou your own. The Single card run is too slow but can be used to test the model.
+
+- Phase 2 has not been chhecked because Phase 1 is too slow.
+
+- Fine-tuning using the MRPC dataset:
+  You can use the `bert_finet_MRPC_1card.yaml` to do the fine-tuning on the pretrained model provided by Habana. Even with a single HPU the run takes only a few minutes.
+  ```bash
+  kubectl create -f bert_finet_MRPC_1card.yaml 
+  ```
+- Fine-tuning using the SQuAD dataset:
+  *TO DO*. 

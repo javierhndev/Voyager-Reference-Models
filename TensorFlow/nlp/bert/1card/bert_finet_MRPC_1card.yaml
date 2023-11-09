@@ -1,0 +1,51 @@
+apiVersion: v1
+kind: Pod
+metadata:
+        name: bertfine
+spec:
+        restartPolicy: Never
+        volumes:
+               - name: scratch
+                 emptyDir: {}
+               - name: ceph
+                 hostPath:
+                        path: /voyager/ceph/users/javierhn
+                        type: Directory
+        containers:
+                - name: gaudi-container
+                  image: vault.habana.ai/gaudi-docker/1.11.0/ubuntu22.04/habanalabs/tensorflow-installer-tf-cpu-2.12.1:latest
+                  volumeMounts:
+                         - mountPath: /scratch
+                           name: scratch
+                         - mountPath: /ceph
+                           name: ceph 
+                  resources:
+                         limits:
+                                memory: 64G
+                                cpu: 6
+                                habana.ai/gaudi: 1
+                                hugepages-2Mi: 95000Mi
+                         requests:
+                                memory: 64G
+                                cpu: 6
+                                habana.ai/gaudi: 1
+                                hugepages-2Mi: 95000Mi
+                  env:
+                    - name: input
+                      value: "/ceph/datasets/bert/MRPC"
+                    - name: output
+                      value: "/ceph/results/bert/pretrained/fine_tuning/MRPC"
+                    - name: pretrain
+                      value: "/ceph/datasets/bert/pretrained/wwm_uncased_L-24_H-1024_A-16"
+                  command: ["/bin/sh","-c"]
+                  args:
+                    - hl-smi;
+                      export HOME=/scratch/tmp;
+                      cd /scratch;
+                      mkdir -p tmp;
+                      git clone -b 1.11.0 https://github.com/HabanaAI/Model-References;
+                      cd Model-References/TensorFlow/nlp/bert/;
+                      export PYTHONPATH=/scratch/Model-References:/scratch/Model-References/TensorFlow/nlp/bert/:$PYTHONPATH;
+                      TF_BF16_CONVERSION=/scratch/Model-References/TensorFlow/nlp/bert/bf16_config/bert.json;
+                      pip install -r requirements.txt;
+                      python3 run_classifier.py --task_name=MRPC --do_train=true --do_eval=true --data_dir=${input} --vocab_file=${pretrain}/vocab.txt --bert_config_file=${pretrain}/bert_config.json --init_checkpoint=${pretrain}/bert_model.ckpt --max_seq_length=128 --train_batch_size=64 --learning_rate=2e-05 --num_train_epochs=3 --output_dir=${output} --use_horovod=false  --enable_scoped_allocator=False;
