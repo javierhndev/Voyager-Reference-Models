@@ -10,3 +10,4 @@ This repository contains the necessary files or links to run a collection of mod
 ## Natural Language processing
 - [BERT](TensorFlow/nlp/bert)
 ## Generative models
+- [Stable-Diffusion](PyTorch/generative_models/stable-diffusion)

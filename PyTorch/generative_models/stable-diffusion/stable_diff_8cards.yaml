@@ -1,0 +1,130 @@
+apiVersion: kubeflow.org/v2beta1
+kind: MPIJob
+metadata:
+  name: javierhn-stable-8cards
+  namespace: default
+spec:
+  slotsPerWorker: 8
+  runPolicy:
+    cleanPodPolicy: Running
+  mpiReplicaSpecs:
+    Launcher:
+      replicas: 1
+      template:
+        spec:
+          volumes:
+            - name: mydir
+              hostPath:
+                path: /home/javierhn
+                type: Directory
+            - name: scratch
+              emptyDir: {}
+            - name: ceph
+              hostPath:
+                path: /voyager/ceph/users/javierhn
+                type: Directory
+          hostIPC: true
+          containers:
+            - image: vault.habana.ai/gaudi-docker/1.11.0/ubuntu22.04/habanalabs/pytorch-installer-2.0.1:latest
+              name: stable-launcher
+              volumeMounts:
+                - name: mydir
+                  mountPath: /home
+                - name: scratch
+                  mountPath: /scratch
+                - name: ceph
+                  mountPath: /ceph
+              env:
+                - name: checkpt
+                  value: "/ceph/datasets/stable_diff/checkpoint/model.ckpt"
+                - name: dataset
+                  value: "/ceph/datasets/stable_diff/laion2B-en"
+              command: ["/bin/bash", "-c"]
+              args:
+                - >-
+                  hl-smi;
+                  declare -xr HOME='/scratch/tmp';
+                  declare -xr NUM_NODES=1;
+                  declare -xr NGPU_PER_NODE=8;
+                  declare -xr N_CARDS=$((NUM_NODES*NGPU_PER_NODE));
+
+                  declare -xr MODEL_PATH=/home/models/Model-References/PyTorch/generative_models/stable-diffusion;
+                  declare -xr PYTHONPATH=$PYTHONPATH:/home/models/Model-References:/home/models/Model-References/Pytorch/generative_models/stable-diffusion/src/taming-transformers:/usr/lib/habanalabs;
+
+                  cd $MODEL_PATH;
+
+                  mpirun  --npernode 1 \
+                    --tag-output \
+                    --allow-run-as-root \
+                    --prefix $MPI_ROOT \
+                    pip install -r requirements.txt;
+
+                  declare -xr CMD="python3 $MODEL_PATH/main.py \
+                                  --base hpu_config_web_dataset.yaml \
+                                  --train \
+                                  --scale_lr False \
+                                  --seed 0 \
+                                  --hpus 8 \
+                                  --batch_size 8 \
+                                  --use_lazy_mode True \
+                                  --autocast \
+                                  --no-test True \
+                                  --max_epochs 10 \
+                                  --limit_train_batches 1000 \
+                                  --limit_val_batches 0 \
+                                  --val_check_interval 1000 \
+                                  --hpu_graph False \
+                                  --ckpt_path=${checkpt}\
+                                  --dataset_path=${dataset}";
+
+
+                  mpirun -np ${N_CARDS} \
+                    --allow-run-as-root \
+                    --bind-to core \
+                    --map-by ppr:4:socket:PE=6 \
+                    -rank-by core --report-bindings \
+                    --tag-output \
+                    --merge-stderr-to-stdout --prefix $MPI_ROOT \
+                    -x PYTHONPATH \
+                    -x HOME \
+                    $CMD;
+
+    Worker:
+      replicas: 1
+      template:
+        spec:
+          volumes:
+            - name: mydir
+              hostPath:
+                path: /home/javierhn
+                type: Directory
+            - name: scratch
+              emptyDir: {}
+            - name: ceph
+              hostPath:
+                path: /voyager/ceph/users/javierhn
+                type: Directory
+          hostIPC: true
+          containers:
+            - image: vault.habana.ai/gaudi-docker/1.11.0/ubuntu22.04/habanalabs/pytorch-installer-2.0.1:latest
+              name: stable-worker
+              imagePullPolicy: Always
+              resources:
+                limits:
+                  habana.ai/gaudi: 8
+                  cpu: 95
+                  memory: 409Gi
+                  hugepages-2Mi: 95000Mi
+                requests:
+                  habana.ai/gaudi: 8
+                  cpu: 95
+                  memory: 409Gi
+                  hugepages-2Mi: 95000Mi
+              volumeMounts:
+                - name: mydir
+                  mountPath: /home
+                - name: scratch
+                  mountPath: /scratch
+                - name: ceph
+                  mountPath: /ceph
+ 

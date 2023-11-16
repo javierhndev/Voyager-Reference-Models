@@ -1,0 +1,60 @@
+apiVersion: v1
+kind: Pod
+metadata:
+        name: stable-inference
+spec:
+        restartPolicy: Never
+        volumes:
+               - name: scratch
+                 emptyDir: {}
+               - name: ceph
+                 hostPath:
+                        path: /voyager/ceph/users/javierhn
+                        type: Directory
+        containers:
+                - name: gaudi-container
+                  image: vault.habana.ai/gaudi-docker/1.11.0/ubuntu22.04/habanalabs/pytorch-installer-2.0.1:latest
+                  volumeMounts:
+                         - mountPath: /scratch
+                           name: scratch
+                         - mountPath: /ceph
+                           name: ceph 
+                  resources:
+                         limits:
+                                memory: 32G
+                                cpu: 12
+                                habana.ai/gaudi: 1
+                                hugepages-2Mi: 95000Mi
+                         requests:
+                                memory: 32G
+                                cpu: 12
+                                habana.ai/gaudi: 1
+                                hugepages-2Mi: 95000Mi
+                  env:
+                    - name: checkpt
+                      value: "/ceph/datasets/stable_diff/checkpoint_trained_habana"
+                    - name: output
+                      value: "/ceph/results/stable_diffusion/inference_from_trained_habana"
+                  command: ["/bin/sh","-c"]
+                  args:
+                    - hl-smi;
+                      export HOME=/scratch/tmp;
+                      cd /scratch;
+                      mkdir -p tmp;
+                      git clone -b 1.11.0 https://github.com/HabanaAI/Model-References;
+                      export MODEL_PATH=/scratch/Model-References/PyTorch/generative_models/stable-diffusion;
+                      export PYTHONPATH=$MODEL_PATH/src/taming-transformers:$PYTHONPATH;
+
+                      cd $MODEL_PATH;
+                      git config --global --add safe.directory `pwd`/src/taming-transformers;
+                      git config --global --add safe.directory `pwd`/src/clip;
+                      pip install -r requirements.txt
+
+                      mkdir -p $MODEL_PATH/models/ldm/text2img-large/;
+
+                      cp ${checkpt}/model.ckpt $MODEL_PATH/models/ldm/text2img-large/model.ckpt;
+                      cd $MODEL_PATH;
+
+                      python scripts/txt2img.py --prompt "a virus monster is playing guitar" --ddim_eta 0.0 --n_samples 10 --n_rows 4 --n_iter 1 --scale 5.0  --ddim_steps 50 --device 'hpu' --precision hmp --use_hpu_graph;
+                      cp -r outputs/txt2img-samples/* ${output};
+ 

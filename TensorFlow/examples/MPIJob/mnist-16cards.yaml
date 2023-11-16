@@ -1,0 +1,86 @@
+apiVersion: kubeflow.org/v2beta1
+kind: MPIJob
+metadata:
+  name: javierhn-mpi-test
+  namespace: default
+spec:
+  slotsPerWorker: 8
+  runPolicy:
+    cleanPodPolicy: Running
+  mpiReplicaSpecs:
+    Launcher:
+      replicas: 1
+      template:
+        spec:
+          volumes:
+            - name: mydir
+              hostPath:
+                path: /home/javierhn
+                type: Directory
+            - name: scratch
+              emptyDir: {}
+          containers:
+            - image: vault.habana.ai/gaudi-docker/1.11.0/ubuntu22.04/habanalabs/tensorflow-installer-tf-cpu-2.12.1:latest
+              name: mpi-test-launcher
+              volumeMounts:
+                - name: mydir
+                  mountPath: /home/javierhn
+                - name: scratch
+                  mountPath: /scratch
+              command: ["/bin/bash", "-c"]
+              args:
+                - >-
+                  declare -xr HOME_DIR='/home/javierhn';
+                  declare -xr NUM_NODES=2;
+                  declare -xr NGPU_PER_NODE=8;
+                  declare -xr N_CARDS=$((NUM_NODES*NGPU_PER_NODE));
+
+                  declare -xr MODEL_PATH=$HOME_DIR/models/Model-References/TensorFlow/examples/hello_world;
+                  declare -xr PYTHONPATH=$PYTHONPATH:$HOME_DIR/models/Model-References:/usr/lib/habanalabs;
+
+                  cd $MODEL_PATH;
+                  cd /scratch;
+
+                  declare -xr CMD="python3 $MODEL_PATH/example_hvd.py";
+                  mpirun -np ${N_CARDS} \
+                    --allow-run-as-root \
+                    --bind-to core \
+                    --map-by ppr:4:socket:PE=6 \
+                    -rank-by core --report-bindings \
+                    --tag-output \
+                    --merge-stderr-to-stdout --prefix $MPI_ROOT \
+                    -x PYTHONPATH \
+                    $CMD;
+
+    Worker:
+      replicas: 2
+      template:
+        spec:
+          volumes:
+            - name: mydir
+              hostPath:
+                path: /home/javierhn
+                type: Directory
+            - name: scratch
+              emptyDir: {}
+          containers:
+            - image: vault.habana.ai/gaudi-docker/1.11.0/ubuntu20.04/habanalabs/tensorflow-installer-tf-cpu-2.12.1:latest
+              name: mpi-test-worker
+              imagePullPolicy: Always
+              resources:
+                limits:
+                  habana.ai/gaudi: 8
+                  cpu: 95
+                  memory: 409Gi
+                  hugepages-2Mi: 95000Mi
+                requests:
+                  habana.ai/gaudi: 8
+                  cpu: 95
+                  memory: 409Gi
+                  hugepages-2Mi: 95000Mi
+              volumeMounts:
+                - name: mydir
+                  mountPath: /home/javierhn
+                - name: scratch
+                  mountPath: /scratch
+ 
