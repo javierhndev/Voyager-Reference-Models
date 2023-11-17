@@ -1,0 +1,138 @@
+apiVersion: kubeflow.org/v2beta1
+kind: MPIJob
+metadata:
+  name: javierhn-bert-8cards
+  namespace: default
+spec:
+  slotsPerWorker: 8
+  runPolicy:
+    cleanPodPolicy: Running
+  mpiReplicaSpecs:
+    Launcher:
+      replicas: 1
+      template:
+        spec:
+          volumes:
+            - name: mydir
+              hostPath:
+                path: /home/javierhn
+                type: Directory
+            - name: scratch
+              emptyDir: {}
+            - name: ceph
+              hostPath:
+                path: /voyager/ceph/users/javierhn
+                type: Directory
+          containers:
+            - image: vault.habana.ai/gaudi-docker/1.11.0/ubuntu22.04/habanalabs/tensorflow-installer-tf-cpu-2.12.1:latest
+              name: bert-launcher
+              volumeMounts:
+                - name: mydir
+                  mountPath: /home
+                - name: scratch
+                  mountPath: /scratch
+                - name: ceph
+                  mountPath: /ceph
+              env:
+                - name: input
+                  value: "/ceph/datasets/bert/MRPC"
+                - name: in_ckpt
+                  value: "/ceph/results/bert/phase_2/model.ckpt-156"
+                - name: output
+                  value: "/ceph/results/bert/fine_tuning/MRPC"
+                - name: pretrain
+                  value: "/ceph/datasets/bert/pretrained/wwm_uncased_L-24_H-1024_A-16"
+              command: ["/bin/bash", "-c"]
+              args:
+                - >-
+                  hl-smi;
+                  declare -xr HOME='/scratch/tmp';
+                  declare -xr NUM_NODES=1;
+                  declare -xr NGPU_PER_NODE=8;
+                  declare -xr N_CARDS=$((NUM_NODES*NGPU_PER_NODE));
+
+                  declare -xr MODEL_PATH=/home/models/Model-References/TensorFlow/nlp/bert;
+                  declare -xr PYTHONPATH=$PYTHONPATH:/home/models/Model-References:/home/models/Model-References/TensorFlow/nlp/bert/:/usr/lib/habanalabs;
+                  declare -xr TF_BF16_CONVERSION=$MODEL_PATH/bf16_config/bert.json;
+
+                  mkdir -p /scratch/tmp;
+                  cd $MODEL_PATH;
+                  echo $PYTHONPATH;
+                  echo 'hi';
+                  echo $MODEL_PATH;
+                  echo $HOME;
+
+                  mpirun  --npernode 1 \
+                    --tag-output \
+                    --allow-run-as-root \
+                    --prefix $MPI_ROOT \
+                    -x HOME \
+                    pip install -r requirements.txt;
+
+                  declare -xr CMD="python3 $MODEL_PATH/run_classifier.py \
+                                 --task_name=MRPC \
+                                 --do_train=true \
+                                 --do_eval=true \
+                                 --data_dir=${input} \
+                                 --vocab_file=${pretrain}/vocab.txt \
+                                 --bert_config_file=${pretrain}/bert_config.json \
+                                 --init_checkpoint=${in_ckpt} \
+                                 --max_seq_length=128 \
+                                 --train_batch_size=64 \
+                                 --learning_rate=2e-05 \
+                                 --num_train_epochs=3 \
+                                 --output_dir=${output}\
+                                 --use_horovod=true \
+                                 --enable_scoped_allocator=False";
+                  
+                  mpirun -np ${N_CARDS} \
+                    --allow-run-as-root \
+                    --bind-to core \
+                    --map-by ppr:4:socket:PE=6 \
+                    -rank-by core --report-bindings \
+                    --tag-output \
+                    --merge-stderr-to-stdout --prefix $MPI_ROOT \
+                    --output-filename /ceph/tmp/bert_phase2_log/ \
+                    -x PYTHONPATH \
+                    -x HOME \
+                    -x TF_BF16_CONVERSION \
+                    $CMD;
+
+    Worker:
+      replicas: 1
+      template:
+        spec:
+          volumes:
+            - name: mydir
+              hostPath:
+                path: /home/javierhn
+                type: Directory
+            - name: scratch
+              emptyDir: {}
+            - name: ceph
+              hostPath:
+                path: /voyager/ceph/users/javierhn
+                type: Directory
+          containers:
+            - image: vault.habana.ai/gaudi-docker/1.11.0/ubuntu20.04/habanalabs/tensorflow-installer-tf-cpu-2.12.1:latest
+              name: bert-worker
+              imagePullPolicy: Always
+              resources:
+                limits:
+                  habana.ai/gaudi: 8
+                  cpu: 95
+                  memory: 409Gi
+                  hugepages-2Mi: 95000Mi
+                requests:
+                  habana.ai/gaudi: 8
+                  cpu: 95
+                  memory: 409Gi
+                  hugepages-2Mi: 95000Mi
+              volumeMounts:
+                - name: mydir
+                  mountPath: /home
+                - name: scratch
+                  mountPath: /scratch
+                - name: ceph
+                  mountPath: /ceph
+ 

@@ -5,7 +5,7 @@ The model was verified on Voyager with SynapseAI version 1.11.
 
 ### Main steps
 - Download the dataset:
-  - Download the Wikipedia and BookCorpus (*to do*) datasets.
+  - Download the Wikipedia and BookCorpus datasets.
   - Pack training dataset (*to do, issue with memory*) for better performance.
   - Download the fine-tuning datasets: MRPC and SQuAD.
   - Download the pretrained model and config. The config file is needed even if you want to do the pre-training.
@@ -13,7 +13,7 @@ The model was verified on Voyager with SynapseAI version 1.11.
   - Pretrain phase 1.
   - Pretrain phase 2.
   - Fine-tuning with the MRPC dataset.
-  - Fine-tuning with the SQuAD dataset.
+  - (*To do*)Fine-tuning with the SQuAD dataset.
 
 ## Data downloading
 The required scripts to download, extract and preprocess the datasets are located in the `Model-References/TensorFlow/nlp/bert/data_preprocessing`folder in Habana's repository.
@@ -67,7 +67,7 @@ Supported by Habana but not required to run on Voyager
 
 ### Download Fine-tuning Datasets
 
-The MRPC dataset can be easily dowloaded using the `download_dataset.py`. Include as a paramter the folder you want to store the data. For example:
+The MRPC dataset can be easily dowloaded using the `download_dataset.py`. Include, as a parameter, the folder you want to store the data. For example:
 ``` bash
 python Model-References/TensorFlow/nlp/bert/download/download_dataset.py /voyager/ceph/users/youruser/datasets/bert/MRPC
 ```
@@ -81,25 +81,47 @@ wget https://rajpurkar.github.io/SQuAD-explorer/dataset/dev-v1.1.json
 ```
 
 ### Download the pretrained model
-Habana offers a pretrained model that can be used for fine-tuning. Even if you are not interested in the pretrained model you need to download it because you need the `bert_config.json` to (pre)train your model.
+Habana offers a pretrained model that can be used for fine-tuning. Even if you are not interested in the pretrained model you need to download it because you need the `bert_config.json` to train your model.
 
 Download the BERT Large pretrained model using our `pretrained.yaml` file. Change the *output* variable to your own folder.
 
 ## Training
 ### Single Card
 
-- The pretraining of Phase 1 of the BERT Large can be done using the `bert_phase1_1card.yaml` in the *1card* folder.Launch the pod with
+- The pretraining of **Phase 1** of the BERT Large can be done using the `bert_phase1_1card.yaml` in the *1card* folder.Launch the pod with
   ```bash
   kubectl create -f bert_phase1_1card.yaml
   ```   
-  Remeber to change the *dataset, pretrained parameters* and *output* folder tou your own. The Single card run is too slow but can be used to test the model.
+  Remeber to change the *dataset, pretrained parameters* and *output* folder to your own. The Single card run is too slow but can be used to test the model.
 
-- Phase 2 has not been chhecked because Phase 1 is too slow.
+- **Phase 2** has not been checked because Phase 1 is too slow in a single card.
 
-- Fine-tuning using the MRPC dataset:
+- Fine-tuning using the **MRPC** dataset:
   You can use the `bert_finet_MRPC_1card.yaml` to do the fine-tuning on the pretrained model provided by Habana. Even with a single HPU the run takes only a few minutes.
   ```bash
   kubectl create -f bert_finet_MRPC_1card.yaml 
   ```
-- Fine-tuning using the SQuAD dataset:
+  Remember to change the *input*,*output* and *pretrain* folders to your own.
+
+- Fine-tuning using the **SQuAD** dataset:
   *TO DO*. 
+
+### 8 Cards (single node)
+
+Most of the parameters passed to the model are the same as in a single card. But the *yaml* files need to be modified to run in multiple HPUs. Here we launch an MPIJob to run the model in one node (with 8 cards). Note that we have modified the number of steps to run it in a few hours.
+
+- Pretraining **Phase 1** of BERT Large. The MPIJob can be launched using the `bert_phase1_8cards.yaml` located in the `8 cards` folder. It assumes the Habana's repository is in the folder
+  ```bash
+  /home/youruser/models/Model-References
+  ``` 
+  Remeber to change the *dataset, pretrained parameters* and *output* folder to your own.
+
+  The number of steps have been reduced to `num_train_steps=100` to check the model. It takes more than an hour in eight HPUs.
+
+- Pretraining of **Phase 2**. You can use `bert_phase2_8cards.yaml` to launch the MPIJob to train the model. The `init_checkpoint` parameter takes as input the checkpoint from phase 1. Again, remeber to change the folders to your own.
+
+  We reduced the number of steps to 156 and it took ~5 hours to run.
+
+- Fine-tuning with the **MRPC** dataset. Launch the MPIJob in 8 cards using the `bert_finet_MRPC_8cards.yaml` file. You should use the last checkpoint from Phase 2 fo the parameter `init_checkpoint` in the script.
+
+  Run takes a couple of minutes.     

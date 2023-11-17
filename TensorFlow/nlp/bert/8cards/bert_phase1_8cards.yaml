@@ -1,0 +1,145 @@
+apiVersion: kubeflow.org/v2beta1
+kind: MPIJob
+metadata:
+  name: javierhn-bert-8cards
+  namespace: default
+spec:
+  slotsPerWorker: 8
+  runPolicy:
+    cleanPodPolicy: Running
+  mpiReplicaSpecs:
+    Launcher:
+      replicas: 1
+      template:
+        spec:
+          volumes:
+            - name: mydir
+              hostPath:
+                path: /home/javierhn
+                type: Directory
+            - name: scratch
+              emptyDir: {}
+            - name: ceph
+              hostPath:
+                path: /voyager/ceph/users/javierhn
+                type: Directory
+          containers:
+            - image: vault.habana.ai/gaudi-docker/1.11.0/ubuntu22.04/habanalabs/tensorflow-installer-tf-cpu-2.12.1:latest
+              name: bert-launcher
+              volumeMounts:
+                - name: mydir
+                  mountPath: /home
+                - name: scratch
+                  mountPath: /scratch
+                - name: ceph
+                  mountPath: /ceph
+              env:
+                - name: input
+                  value: "/ceph/datasets/bert/books_wiki_en_corpus/tfrecord/seq_len_128/wikicorpus_en/training"
+                - name: eval
+                  value: "/ceph/datasets/bert/books_wiki_en_corpus/tfrecord/seq_len_128/wikicorpus_en/test"
+                - name: pretrain
+                  value: "/ceph/datasets/bert/pretrained/wwm_uncased_L-24_H-1024_A-16/bert_config.json"
+              command: ["/bin/bash", "-c"]
+              args:
+                - >-
+                  hl-smi;
+                  declare -xr HOME='/scratch/tmp';
+                  declare -xr NUM_NODES=1;
+                  declare -xr NGPU_PER_NODE=8;
+                  declare -xr N_CARDS=$((NUM_NODES*NGPU_PER_NODE));
+
+                  declare -xr MODEL_PATH=/home/models/Model-References/TensorFlow/nlp/bert;
+                  declare -xr PYTHONPATH=$PYTHONPATH:/home/models/Model-References:/home/models/Model-References/TensorFlow/nlp/bert/:/usr/lib/habanalabs;
+                  declare -xr TF_BF16_CONVERSION=$MODEL_PATH/bf16_config/bert.json;
+
+                  mkdir -p /scratch/tmp;
+                  cd $MODEL_PATH;
+                  echo $PYTHONPATH;
+                  echo 'hi';
+                  echo $MODEL_PATH;
+                  echo $HOME;
+
+                  mpirun  --npernode 1 \
+                    --tag-output \
+                    --allow-run-as-root \
+                    --prefix $MPI_ROOT \
+                    -x HOME \
+                    pip install -r requirements.txt;
+
+                  declare -xr CMD="python3 $MODEL_PATH/run_pretraining.py \
+                                 --input_files_dir=${input} \
+                                 --init_checkpoint= \
+                                 --eval_files_dir=${eval} \
+                                 --output_dir=/ceph/results/bert/phase_1 \
+                                 --bert_config_file=${pretrain} \
+                                 --do_train=True \
+                                 --do_eval=False \
+                                 --train_batch_size=64 \
+                                 --eval_batch_size=8 \
+                                 --max_seq_length=128 \
+                                 --max_predictions_per_seq=20 \
+                                 --num_train_steps=100 \ #7038 \
+                                 --num_accumulation_steps=128 \
+                                 --num_warmup_steps=2000 \
+                                 --save_checkpoints_steps=100 \
+                                 --learning_rate=0.00075 \
+                                 --horovod \
+                                 --noamp \
+                                 --nouse_xla \
+                                 --allreduce_post_accumulation=True \
+                                 --dllog_path=/ceph/results/bert/phase_1/bert_dllog.json \
+                                 --enable_scoped_allocator=False \
+                                 --resume=False";
+
+                  mpirun -np ${N_CARDS} \
+                    --allow-run-as-root \
+                    --bind-to core \
+                    --map-by ppr:4:socket:PE=6 \
+                    -rank-by core --report-bindings \
+                    --tag-output \
+                    --merge-stderr-to-stdout --prefix $MPI_ROOT \
+                    --output-filename /ceph/tmp/bert_phase1_log/ \
+                    -x PYTHONPATH \
+                    -x HOME \
+                    -x TF_BF16_CONVERSION \
+                    $CMD;
+
+    Worker:
+      replicas: 1
+      template:
+        spec:
+          volumes:
+            - name: mydir
+              hostPath:
+                path: /home/javierhn
+                type: Directory
+            - name: scratch
+              emptyDir: {}
+            - name: ceph
+              hostPath:
+                path: /voyager/ceph/users/javierhn
+                type: Directory
+          containers:
+            - image: vault.habana.ai/gaudi-docker/1.11.0/ubuntu20.04/habanalabs/tensorflow-installer-tf-cpu-2.12.1:latest
+              name: bert-worker
+              imagePullPolicy: Always
+              resources:
+                limits:
+                  habana.ai/gaudi: 8
+                  cpu: 95
+                  memory: 409Gi
+                  hugepages-2Mi: 95000Mi
+                requests:
+                  habana.ai/gaudi: 8
+                  cpu: 95
+                  memory: 409Gi
+                  hugepages-2Mi: 95000Mi
+              volumeMounts:
+                - name: mydir
+                  mountPath: /home
+                - name: scratch
+                  mountPath: /scratch
+                - name: ceph
+                  mountPath: /ceph
+ 
