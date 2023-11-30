@@ -27,7 +27,7 @@ wget -qO- https://raw.githubusercontent.com/soumith/imagenetloader.torch/master/
 ```  
 Note that the dataset is ~170Gb and takes several hours to download
 
-** Alternative **
+**Alternative**
 Right now the dataset is located in
 ```bash
 /voyager/ceph/users/javierhn/datasets/imagenet/ILSVRC2012
@@ -52,7 +52,7 @@ All the yaml files here use two environment variables: `dataset` and `output`. U
 Note that the number of epochs for every run has been set to 1 for testing.
 
 ### Training examples (single card and multi-card)
-** Run on 1 HPU **
+**Run on 1 HPU**
 You can find the yaml files in the `1card` folder. Execute them with
 ```bash
 kubectl create -f themodel.yaml
@@ -104,9 +104,87 @@ Note each run takes ~3 hours to run 1 epoch in 1 HPU.
   ```
 
 
-** Run on 8 HPUs **
+**Run on 8 HPUs**
+To run the models in multiple cards on Voyager, we submit an MPIJob instead of a single pod. You can find the yaml files and the `setup.sh` in the `8cards` folder.
 
+The following commands are executed in the MPIJob:
 
-** Run on 16 or 32 HPUs **
+```bash
+declare -xr HOME='/scratch/tmp';
+declare -xr NUM_NODES=1;
+declare -xr NGPU_PER_NODE=8;
+declare -xr N_CARDS=$((NUM_NODES*NGPU_PER_NODE));
+
+declare -xr RUN_PATH=/home/models/resnet/8cards;
+declare -xr MODEL_PATH=/home/models/Model-References/PyTorch/computer_vision/classification/torchvision;
+
+declare -xr PYTHONPATH=$PYTHONPATH:/home/models/Model-References;
+
+HOSTSFILE=${HOSTSFILE:-$OMPI_MCA_orte_default_hostfile};
+declare -xr MASTER_ADDR=$(head -n 1 $HOSTSFILE | sed -n s/[[:space:]]slots.*//p);
+declare -xr MASTER_PORT=${MASTER_PORT:-15566};
+
+mkdir -p /scratch/tmp;
+cd $MODEL_PATH;
+echo $MASTER_ADDR;
+echo $MASTER_PORT;
+
+mpirun  --npernode 1 \
+  --tag-output \
+  --allow-run-as-root \
+  --prefix $MPI_ROOT \
+  -x MODEL_PATH \
+  -x HOME \
+  $RUN_PATH/setup.sh;
+
+declare -xr CMD="python3 $MODEL_PATH/train.py \
+                 #model parameters... "
+
+mpirun -np ${N_CARDS} \
+  --allow-run-as-root \
+  --bind-to core \
+  --map-by ppr:4:socket:PE=6 \
+  -rank-by core --report-bindings \
+  --tag-output \
+  --merge-stderr-to-stdout --prefix $MPI_ROOT \
+  -x MASTER_ADDR=$MASTER_ADDR \
+  -x MASTER_PORT=$MASTER_PORT \
+  -x PYTHONPATH \
+  -x HOME \
+  $CMD;
+```
+
+You need to define the `RUN_PATH` variable and set it to the folder where you have the yaml and setup.sh files. Remember also to point `MODEL_PATH` to the the folder were you store the [Habana's repository](https://github.com/HabanaAI/Model-References).
+
+- ResNet50 (lazy mode, BF16 mixed precision, batch size 256, custom learning rate, 8 HPUs):  ```bash
+  kubectl create -f resnet50_8cards.yaml
+  ``` 
+- ResNeXt101 (lazy mode, BF16 mixed precision, batch size 256, 8 HPUs, uses habana_dataloader)
+  ```bash
+  kubectl create -f resnext101_8cards.yaml
+  ```
+- MobileNetV2 (lazy mode, BF16 mixed precision, batch size 256, 8 HPUs, use habana_dataloader, 8 workers)
+  ```bash
+  kubectl create -f mobilenetv2_8cards.yaml
+  ```
+- GoogLeNet (batch size 256, BF16 precision, lazy mode, 8 HPUs, uses habana_dataloader, 8 workers)
+  ```bash
+  kubectl create -f googlenet_8cards.yaml 
+  ```
+
+**Run on 16 or 32 HPUs**
+
+Running on multiple nodes (16 or more HPUs) is relatively easy and only a few modifications to the `8cards` files are needed. We are providing as an example the ResNet50 model on 16 and 32 cards. You can find them in the `16cards` and `32cards` folders. The main change is that the values in `NUM_NODES` and `Replicas` (in workers) in the yaml file need to be replaced by the actual value of nodes used.
+
+### Profiling
+
+The models show a good scaling when number of nodes is increased. As an example, the following table shows the training time of 1 Epoch using the ResNet50 model
+
+|         | Time    |
+| ------- | ------- |
+| 1 HPU   | ~3hours |
+| 8 HPUs  | 20 min  |
+| 16 HPUs | 11 min  |
+| 32 HPUs | 7 min   |
 
 

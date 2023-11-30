@@ -1,0 +1,139 @@
+apiVersion: kubeflow.org/v2beta1
+kind: MPIJob
+metadata:
+  name: javierhn-resnext-8cards
+  namespace: default
+spec:
+  slotsPerWorker: 8
+  runPolicy:
+    cleanPodPolicy: Running
+  mpiReplicaSpecs:
+    Launcher:
+      replicas: 1
+      template:
+        spec:
+          volumes:
+            - name: mydir
+              hostPath:
+                path: /home/javierhn
+                type: Directory
+            - name: scratch
+              emptyDir: {}
+            - name: ceph
+              hostPath:
+                path: /voyager/ceph/users/javierhn
+                type: Directory
+          hostIPC: true
+          containers:
+            - image: vault.habana.ai/gaudi-docker/1.11.0/ubuntu22.04/habanalabs/pytorch-installer-2.0.1:latest
+              name: resnext-launcher
+              volumeMounts:
+                - name: mydir
+                  mountPath: /home
+                - name: scratch
+                  mountPath: /scratch
+                - name: ceph
+                  mountPath: /ceph
+              env:
+                - name: dataset
+                  value: "/ceph/datasets/imagenet/ILSVRC2012"
+                - name: output
+                  value: "/ceph/results/resnet/resnext101/8cards"
+              command: ["/bin/bash", "-c"]
+              args:
+                - >-
+                  hl-smi;
+                  declare -xr HOME='/scratch/tmp';
+                  declare -xr NUM_NODES=1;
+                  declare -xr NGPU_PER_NODE=8;
+                  declare -xr N_CARDS=$((NUM_NODES*NGPU_PER_NODE));
+
+                  declare -xr RUN_PATH=/home/models/resnet/8cards;
+                  declare -xr MODEL_PATH=/home/models/Model-References/PyTorch/computer_vision/classification/torchvision;
+
+                  declare -xr PYTHONPATH=$PYTHONPATH:/home/models/Model-References;
+
+                  HOSTSFILE=${HOSTSFILE:-$OMPI_MCA_orte_default_hostfile};
+                  declare -xr MASTER_ADDR=$(head -n 1 $HOSTSFILE | sed -n s/[[:space:]]slots.*//p);
+                  declare -xr MASTER_PORT=${MASTER_PORT:-15566};
+
+                  mkdir -p /scratch/tmp;
+                  cd $MODEL_PATH;
+                  echo $MASTER_ADDR;
+                  echo $MASTER_PORT;
+
+                  mpirun  --npernode 1 \
+                    --tag-output \
+                    --allow-run-as-root \
+                    --prefix $MPI_ROOT \
+                    -x MODEL_PATH \
+                    -x HOME \
+                    $RUN_PATH/setup.sh;
+
+                  declare -xr CMD="python3 $MODEL_PATH/train.py \
+                                   --data-path=${dataset} \
+                                   --model=resnext101_32x4d \
+                                   --device=hpu \
+                                   --batch-size=256 \
+                                   --epochs=1 \
+                                   --print-freq=20 \
+                                   --output-dir=${output} \
+                                   --seed=123 \
+                                   --autocast \
+                                   --deterministic \
+                                   --save-checkpoint \
+                                   --dl-time-exclude=False \
+                                   --dl-worker-type=HABANA";
+
+                  mpirun -np ${N_CARDS} \
+                    --allow-run-as-root \
+                    --bind-to core \
+                    --map-by ppr:4:socket:PE=6 \
+                    -rank-by core --report-bindings \
+                    --tag-output \
+                    --merge-stderr-to-stdout --prefix $MPI_ROOT \
+                    -x MASTER_ADDR=$MASTER_ADDR \
+                    -x MASTER_PORT=$MASTER_PORT \
+                    -x PYTHONPATH \
+                    -x HOME \
+                    $CMD;
+
+    Worker:
+      replicas: 1
+      template:
+        spec:
+          volumes:
+            - name: mydir
+              hostPath:
+                path: /home/javierhn
+                type: Directory
+            - name: scratch
+              emptyDir: {}
+            - name: ceph
+              hostPath:
+                path: /voyager/ceph/users/javierhn
+                type: Directory
+          hostIPC: true
+          containers:
+            - image: vault.habana.ai/gaudi-docker/1.11.0/ubuntu22.04/habanalabs/pytorch-installer-2.0.1:latest
+              name: resnext-worker
+              imagePullPolicy: Always
+              resources:
+                limits:
+                  habana.ai/gaudi: 8
+                  cpu: 95
+                  memory: 409Gi
+                  hugepages-2Mi: 95000Mi
+                requests:
+                  habana.ai/gaudi: 8
+                  cpu: 95
+                  memory: 409Gi
+                  hugepages-2Mi: 95000Mi
+              volumeMounts:
+                - name: mydir
+                  mountPath: /home
+                - name: scratch
+                  mountPath: /scratch
+                - name: ceph
+                  mountPath: /ceph
+ 
