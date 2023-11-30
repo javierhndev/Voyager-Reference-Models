@@ -156,7 +156,8 @@ mpirun -np ${N_CARDS} \
 
 You need to define the `RUN_PATH` variable and set it to the folder where you have the yaml and setup.sh files. Remember also to point `MODEL_PATH` to the the folder were you store the [Habana's repository](https://github.com/HabanaAI/Model-References).
 
-- ResNet50 (lazy mode, BF16 mixed precision, batch size 256, custom learning rate, 8 HPUs):  ```bash
+- ResNet50 (lazy mode, BF16 mixed precision, batch size 256, custom learning rate, 8 HPUs): 
+  ```bash
   kubectl create -f resnet50_8cards.yaml
   ``` 
 - ResNeXt101 (lazy mode, BF16 mixed precision, batch size 256, 8 HPUs, uses habana_dataloader)
