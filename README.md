@@ -6,7 +6,7 @@ This repository contains the necessary files or links to run a collection of mod
 ## Simple examples
 - ['Hello World!'](helloworld): simplest example to run in Voyager.
 - [Fashion-MNIST](TensorFlow/examples/Fashion-MNIST) model. It shows how to run a python script with TensorFlow.
-- [MPIJob](TensorFlow/examples/MPIJob) (Working on it) 
+- [MPIJob](TensorFlow/examples/MPIJob) Learn how to run a MNIST model in multiple HPUs. 
 
 ## Computer Vision
 | Models                                                                                | Framework  |
