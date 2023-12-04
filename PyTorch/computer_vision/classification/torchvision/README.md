@@ -47,7 +47,7 @@ We are showing here some examples for each model. You can find more examples wit
   python3 -u main.py --help
   ```
 
-All the yaml files here use two environment variables: `dataset` and `output`. Use them to point the location of the dataset and output folder (Use Ceph). Multi-card examples also define a path for the Habana's `Model-References` and a `RUN_PATH` (where the `.yaml` file and `setup.sh` are located).
+All the yaml files here use two environment variables: `dataset` and `output`. Use them to point the location of the dataset and output folder (Use Ceph). Multi-card examples also define a path for a `RUN_PATH` (where the `.yaml` file and `setup.sh` are located).
  
 Note that the number of epochs for every run has been set to 1 for testing.
 
@@ -116,16 +116,14 @@ declare -xr NGPU_PER_NODE=8;
 declare -xr N_CARDS=$((NUM_NODES*NGPU_PER_NODE));
 
 declare -xr RUN_PATH=/home/models/resnet/8cards;
-declare -xr MODEL_PATH=/home/models/Model-References/PyTorch/computer_vision/classification/torchvision;
+declare -xr MODEL_PATH=/scratch/Model-References/PyTorch/computer_vision/classification/torchvision;
 
-declare -xr PYTHONPATH=$PYTHONPATH:/home/models/Model-References;
+declare -xr PYTHONPATH=$PYTHONPATH:/scratch/Model-References;
 
 HOSTSFILE=${HOSTSFILE:-$OMPI_MCA_orte_default_hostfile};
 declare -xr MASTER_ADDR=$(head -n 1 $HOSTSFILE | sed -n s/[[:space:]]slots.*//p);
 declare -xr MASTER_PORT=${MASTER_PORT:-15566};
 
-mkdir -p /scratch/tmp;
-cd $MODEL_PATH;
 echo $MASTER_ADDR;
 echo $MASTER_PORT;
 
@@ -154,7 +152,7 @@ mpirun -np ${N_CARDS} \
   $CMD;
 ```
 
-You need to define the `RUN_PATH` variable and set it to the folder where you have the yaml and setup.sh files. Remember also to point `MODEL_PATH` to the the folder were you store the [Habana's repository](https://github.com/HabanaAI/Model-References).
+You need to define the `RUN_PATH` variable and set it to the folder where you have the yaml and setup.sh files. Note that the setup.sh will copy [Habana's repository](https://github.com/HabanaAI/Model-References) to scratch (no need to do it yourself).
 
 - ResNet50 (lazy mode, BF16 mixed precision, batch size 256, custom learning rate, 8 HPUs): 
   ```bash

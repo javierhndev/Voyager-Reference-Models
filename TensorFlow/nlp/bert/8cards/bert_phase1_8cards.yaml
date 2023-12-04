@@ -43,29 +43,25 @@ spec:
               command: ["/bin/bash", "-c"]
               args:
                 - >-
-                  hl-smi;
                   declare -xr HOME='/scratch/tmp';
                   declare -xr NUM_NODES=1;
                   declare -xr NGPU_PER_NODE=8;
                   declare -xr N_CARDS=$((NUM_NODES*NGPU_PER_NODE));
 
-                  declare -xr MODEL_PATH=/home/models/Model-References/TensorFlow/nlp/bert;
-                  declare -xr PYTHONPATH=$PYTHONPATH:/home/models/Model-References:/home/models/Model-References/TensorFlow/nlp/bert/:/usr/lib/habanalabs;
+                  declare -xr RUN_PATH=/home/models/bert/8cards;
+                  declare -xr MODEL_PATH=/scratch/Model-References/TensorFlow/nlp/bert;
+
+                  declare -xr PYTHONPATH=$PYTHONPATH:/scratch/Model-References:/scratch/Model-References/TensorFlow/nlp/bert/:/usr/lib/habanalabs;
                   declare -xr TF_BF16_CONVERSION=$MODEL_PATH/bf16_config/bert.json;
 
-                  mkdir -p /scratch/tmp;
-                  cd $MODEL_PATH;
-                  echo $PYTHONPATH;
-                  echo 'hi';
-                  echo $MODEL_PATH;
-                  echo $HOME;
 
                   mpirun  --npernode 1 \
                     --tag-output \
                     --allow-run-as-root \
                     --prefix $MPI_ROOT \
+                    -x MODEL_PATH \
                     -x HOME \
-                    pip install -r requirements.txt;
+                    $RUN_PATH/setup.sh;
 
                   declare -xr CMD="python3 $MODEL_PATH/run_pretraining.py \
                                  --input_files_dir=${input} \

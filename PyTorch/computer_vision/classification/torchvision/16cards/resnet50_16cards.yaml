@@ -49,16 +49,14 @@ spec:
                   declare -xr N_CARDS=$((NUM_NODES*NGPU_PER_NODE));
 
                   declare -xr RUN_PATH=/home/models/resnet/16cards;
-                  declare -xr MODEL_PATH=/home/models/Model-References/PyTorch/computer_vision/classification/torchvision;
+                  declare -xr MODEL_PATH=/scratch/Model-References/PyTorch/computer_vision/classification/torchvision;
 
-                  declare -xr PYTHONPATH=$PYTHONPATH:/home/models/Model-References;
+                  declare -xr PYTHONPATH=$PYTHONPATH:/scratch/Model-References;
 
                   HOSTSFILE=${HOSTSFILE:-$OMPI_MCA_orte_default_hostfile};
                   declare -xr MASTER_ADDR=$(head -n 1 $HOSTSFILE | sed -n s/[[:space:]]slots.*//p);
                   declare -xr MASTER_PORT=${MASTER_PORT:-15566};
 
-                  mkdir -p /scratch/tmp;
-                  cd $MODEL_PATH;
                   echo $MASTER_ADDR;
                   echo $MASTER_PORT;
 

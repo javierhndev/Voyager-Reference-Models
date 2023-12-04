@@ -108,12 +108,10 @@ Download the BERT Large pretrained model using our `pretrained.yaml` file. Chang
 
 ### 8 Cards (single node)
 
-Most of the parameters passed to the model are the same as in a single card. But the *yaml* files need to be modified to run in multiple HPUs. Here we launch an MPIJob to run the model in one node (with 8 cards). Note that we have modified the number of steps to run it in a few hours.
+Most of the parameters passed to the model are the same as in a single card. But the *yaml* files have been modified to run in multiple HPUs. Here we launch an MPIJob to run the model in one node (with 8 cards). Note that we have modified the number of steps to run it in a few hours.
 
-- Pretraining **Phase 1** of BERT Large. The MPIJob can be launched using the `bert_phase1_8cards.yaml` located in the `8 cards` folder. It assumes the Habana's repository is in the folder
-  ```bash
-  /home/youruser/models/Model-References
-  ``` 
+- Pretraining **Phase 1** of BERT Large. The MPIJob can be launched using the `bert_phase1_8cards.yaml` located in the `8 cards` folder. You need to modify the `RUN_PATH` variable to point to the location of your `yaml` and `setup.sh` files. 
+ 
   Remeber to change the *dataset, pretrained parameters* and *output* folder to your own.
 
   The number of steps have been reduced to `num_train_steps=100` to check the model. It takes more than an hour in eight HPUs.
