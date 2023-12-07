@@ -14,6 +14,7 @@ This repository contains the necessary files or links to run a collection of mod
 | [ResNet50, ResNet152, ResNeXt101](PyTorch/computer_vision/classification/torchvision) | Pytorch    |
 | [MobileNetV2](PyTorch/computer_vision/classification/torchvision)                     | Pytorch    |
 | [GoogLeNet](PyTorch/computer_vision/classification/torchvision)                       | Pytorch    |
+| [UNet-2D](TensorFlow/computer_vision/Unet2D)                                          | Tensorflow |
 
 
 ## Natural Language processing
