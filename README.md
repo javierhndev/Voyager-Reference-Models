@@ -9,20 +9,21 @@ This repository contains the necessary files or links to run a collection of mod
 - [MPIJob](TensorFlow/examples/MPIJob) Learn how to run a MNIST model in multiple HPUs. 
 
 ## Computer Vision
-| Models                                                                                | Framework  |
-| ------------------------------------------------------------------------------------- | ---------- |
-| [ResNet50, ResNet152, ResNeXt101](PyTorch/computer_vision/classification/torchvision) | Pytorch    |
-| [MobileNetV2](PyTorch/computer_vision/classification/torchvision)                     | Pytorch    |
-| [GoogLeNet](PyTorch/computer_vision/classification/torchvision)                       | Pytorch    |
-| [UNet-2D](TensorFlow/computer_vision/Unet2D)                                          | Tensorflow |
+| Models                                                                                | Framework  | Multi-node |
+| ------------------------------------------------------------------------------------- | ---------- | ---------- |
+| [ResNet50, ResNet152, ResNeXt101](PyTorch/computer_vision/classification/torchvision) | Pytorch    |  Yes       |
+| [MobileNetV2](PyTorch/computer_vision/classification/torchvision)                     | Pytorch    |  Yes       |
+| [GoogLeNet](PyTorch/computer_vision/classification/torchvision)                       | Pytorch    |  Yes       |
+| [UNet-2D](TensorFlow/computer_vision/Unet2D)                                          | TensorFlow |            |
+| [ResNet50 (Keras)](TensorFlow/computer_vision/Resnets)                                | TensorFlow |  Yes       |
 
 
 ## Natural Language processing
-| Models                      | Framework  |
-| --------------------------- | ---------- |
-| [BERT](TensorFlow/nlp/bert) | TensorFlow |
+| Models                      | Framework  | Multi-node |
+| --------------------------- | ---------- | ---------- |
+| [BERT](TensorFlow/nlp/bert) | TensorFlow |            |
 
 ## Generative models
-| Models                                                         | Framework  |
-| -------------------------------------------------------------- | ---------- |
-| [Stable-Diffusion](PyTorch/generative_models/stable-diffusion) | Pytorch    |
+| Models                                                         | Framework  | Multi-node |
+| -------------------------------------------------------------- | ---------- | ---------- |
+| [Stable-Diffusion](PyTorch/generative_models/stable-diffusion) | Pytorch    |            |

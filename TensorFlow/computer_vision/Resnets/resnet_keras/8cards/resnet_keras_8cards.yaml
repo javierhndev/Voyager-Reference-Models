@@ -1,0 +1,130 @@
+apiVersion: kubeflow.org/v2beta1
+kind: MPIJob
+metadata:
+  name: javierhn-resnet-8cards
+  namespace: default
+spec:
+  slotsPerWorker: 8
+  runPolicy:
+    cleanPodPolicy: Running
+  mpiReplicaSpecs:
+    Launcher:
+      replicas: 1
+      template:
+        spec:
+          volumes:
+            - name: mydir
+              hostPath:
+                path: /home/javierhn
+                type: Directory
+            - name: scratch
+              emptyDir: {}
+            - name: ceph
+              hostPath:
+                path: /voyager/ceph/users/javierhn
+                type: Directory
+          containers:
+            - image: vault.habana.ai/gaudi-docker/1.11.0/ubuntu22.04/habanalabs/tensorflow-installer-tf-cpu-2.12.1:latest
+              name: resnet-launcher
+              volumeMounts:
+                - name: mydir
+                  mountPath: /home
+                - name: scratch
+                  mountPath: /scratch
+                - name: ceph
+                  mountPath: /ceph
+              env:
+                - name: dataset
+                  value: "/ceph/datasets/imagenet/ILSVRC2012/tf_records"
+                - name: output
+                  value: "/ceph/results/resnet_keras/8cards"                
+              command: ["/bin/bash", "-c"]
+              args:
+                - >-
+                  declare -xr HOME='/scratch/tmp';
+                  declare -xr NUM_NODES=1;
+                  declare -xr NGPU_PER_NODE=8;
+                  declare -xr N_CARDS=$((NUM_NODES*NGPU_PER_NODE));
+
+                  declare -xr RUN_PATH=/home/models/resnet_keras/8cards;
+                  declare -xr MODEL_PATH=/scratch/Model-References/TensorFlow/computer_vision/Resnets/resnet_keras;
+
+                  declare -xr PYTHONPATH=$PYTHONPATH:/scratch/Model-References;
+
+
+                  mpirun  --npernode 1 \
+                    --tag-output \
+                    --allow-run-as-root \
+                    --prefix $MPI_ROOT \
+                    -x MODEL_PATH \
+                    -x HOME \
+                    $RUN_PATH/setup.sh;
+
+                  declare -xr CMD="python3 $MODEL_PATH/resnet_ctl_imagenet_main.py \
+                                   --dtype bf16 \
+                                   --data_loader_image_type bf16 \
+                                   --use_horovod \
+                                   -te 40 \
+                                   -ebe 40 \
+                                   -bs 256 \
+                                   --optimizer LARS \
+                                   --base_learning_rate 9.5 \
+                                   --warmup_epochs 3 \
+                                   --lr_schedule polynomial \
+                                   --label_smoothing 0.1 \
+                                   --weight_decay 0.0001 \
+                                   --single_l2_loss_op \
+                                   --data_dir ${dataset} \
+                                   --model_dir ${output} \
+                                   --enable_tensorboard";
+                  
+
+                  mpirun -np ${N_CARDS} \
+                    --allow-run-as-root \
+                    --bind-to core \
+                    --map-by ppr:4:socket:PE=6 \
+                    -rank-by core --report-bindings \
+                    --tag-output \
+                    --merge-stderr-to-stdout --prefix $MPI_ROOT \
+                    -x PYTHONPATH \
+                    -x HOME \
+                    $CMD;
+
+    Worker:
+      replicas: 1
+      template:
+        spec:
+          volumes:
+            - name: mydir
+              hostPath:
+                path: /home/javierhn
+                type: Directory
+            - name: scratch
+              emptyDir: {}
+            - name: ceph
+              hostPath:
+                path: /voyager/ceph/users/javierhn
+                type: Directory
+          containers:
+            - image: vault.habana.ai/gaudi-docker/1.11.0/ubuntu20.04/habanalabs/tensorflow-installer-tf-cpu-2.12.1:latest
+              name: resnet-worker
+              imagePullPolicy: Always
+              resources:
+                limits:
+                  habana.ai/gaudi: 8
+                  cpu: 95
+                  memory: 409Gi
+                  hugepages-2Mi: 95000Mi
+                requests:
+                  habana.ai/gaudi: 8
+                  cpu: 95
+                  memory: 409Gi
+                  hugepages-2Mi: 95000Mi
+              volumeMounts:
+                - name: mydir
+                  mountPath: /home
+                - name: scratch
+                  mountPath: /scratch
+                - name: ceph
+                  mountPath: /ceph
+ 
