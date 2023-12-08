@@ -6,10 +6,10 @@ The model was verified on Voyager with SynapseAI version 1.11.
 
 ## Data downloading and preparation
 
-This model uses the same dataset used for the [ResNet in Pytorch](~/PyTorch/computer_vision/classification/torchvision): the ILSVRC 2012 challenge. The text below explains how to get the data if you (a) have the Pytorch dataset already or (b) you don't have it. A (c) option shows the current location of the dataset on Voyager.
+This model uses the same dataset used for the [ResNet in Pytorch](/PyTorch/computer_vision/classification/torchvision): the ILSVRC 2012 challenge. The text below explains how to get the data if you (a) have the Pytorch dataset already or (b) you don't have it. A (c) option shows the current location of the dataset on Voyager.
 
 ### (a) Pytorch dataset available
-The following steps assume you already got the dataset from [ResNet in Pytorch](~/PyTorch/computer_vision/classification/torchvision). So in the folder `datasets/imagenet/ILSVRC2012` you should have:
+The following steps assume you already got the dataset from [ResNet in Pytorch](/PyTorch/computer_vision/classification/torchvision). So in the folder `datasets/imagenet/ILSVRC2012` you should have:
 - ILSVRC2012_img_train.tar
 - ILSVRC2012_img_val.tar 
 - /train
@@ -34,7 +34,7 @@ Note that it takes ~12hours to process all the data.
 
 ### (b) Download and process all the dataset
   
-If you never got the dataset for the [ResNet in Pytorch](~/PyTorch/computer_vision/classification/torchvision). You need to follow these steps:
+If you never got the dataset for the [ResNet in Pytorch](/PyTorch/computer_vision/classification/torchvision). You need to follow these steps:
 - Sign up with [http://image-net.org/download-images](http://image-net.org/download-images) and acquire the rights to download original images.
 - Follow the link to the 2012 ILSVRC to download `ILSVRC2012_img_val.tar` and `ILSVRC2012_img_train.tar`.
 - Use the below commands to prepare the dataset in `datasets/imagenet/ILSVRC2012`. This will create a `./train` and `./val` folders whith the original JPEG files.
