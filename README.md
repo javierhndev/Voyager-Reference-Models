@@ -1,7 +1,7 @@
 # Reference Models for Voyager
 This repository contains the necessary files or links to run a collection of models on Voyager at the San Diego Supercomputer Center (SDSC). The majority of those models are the ones supported by Intel Habana [link](https://github.com/HabanaAI/Model-References).
 
-The list of models is being improved. Your feedback is greatly appreciated. Feel free to open an issue or contact me (Javier Hernandez-Nicolau) at javierhn *at* ucsd.edu
+The list of models is being improved. Your feedback is greatly appreciated. Feel free to open an issue or contact me (Javier Hernandez-Nicolau) at `javierhn *at* ucsd.edu`.
 
 ## Model list
 
