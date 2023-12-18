@@ -1,7 +1,7 @@
 apiVersion: kubeflow.org/v2beta1
 kind: MPIJob
 metadata:
-  name: javierhn-resnext-8cards
+  name: resnext-8cards
   namespace: default
 spec:
   slotsPerWorker: 8
@@ -15,13 +15,13 @@ spec:
           volumes:
             - name: mydir
               hostPath:
-                path: /home/javierhn
+                path: /home/username
                 type: Directory
             - name: scratch
               emptyDir: {}
             - name: ceph
               hostPath:
-                path: /voyager/ceph/users/javierhn
+                path: /voyager/ceph/users/username
                 type: Directory
           hostIPC: true
           containers:
@@ -103,13 +103,13 @@ spec:
           volumes:
             - name: mydir
               hostPath:
-                path: /home/javierhn
+                path: /home/username
                 type: Directory
             - name: scratch
               emptyDir: {}
             - name: ceph
               hostPath:
-                path: /voyager/ceph/users/javierhn
+                path: /voyager/ceph/users/username
                 type: Directory
           hostIPC: true
           containers:

@@ -9,7 +9,7 @@ spec:
       emptyDir: {}
     - name: ceph
       hostPath:
-        path: /voyager/ceph/users/javierhn
+        path: /voyager/ceph/users/yourusername
         type: Directory
   containers:
     - name: gaudi-container
@@ -38,9 +38,9 @@ spec:
       command: ["/bin/sh","-c"]
       args:
          - hl-smi;
-           export HOME=/scratch/tmp/javierhn;
+           export HOME=/scratch/tmp;
            cd /scratch;
-           mkdir -p tmp/javierhn;
+           mkdir -p tmp;
            git clone -b 1.11.0 https://github.com/HabanaAI/Model-References;
            export PYTHONPATH=$PYTHONPATH:/scratch/Model-References/;
            cd /scratch/Model-References/TensorFlow/computer_vision/Unet2D;

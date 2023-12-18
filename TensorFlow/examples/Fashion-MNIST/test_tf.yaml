@@ -7,14 +7,14 @@ spec:
         volumes:
                 - name: home
                   hostPath:
-                          path: /home/javierhn
+                          path: /home/yourusername
                           type: Directory
         containers:
                 - name: gaudi-container
                   #image: vault.habana.ai/gaudi-docker/1.8.0/ubuntu22.04/habanalabs/tensorflow-installer-tf-cpu-2.8.4:1.8.0-690-20230214
                   image: vault.habana.ai/gaudi-docker/1.11.0/ubuntu22.04/habanalabs/tensorflow-installer-tf-cpu-2.12.1:latest
                   volumeMounts:
-                          - mountPath: /home/javierhn
+                          - mountPath: /home/yourusername
                             name: home
                   resources:
                          limits:
@@ -26,4 +26,4 @@ spec:
                                 cpu: 1
                                 habana.ai/gaudi: 1
                   command: ["/bin/sh","-c"]
-                  args: ["cd /home/javierhn/test_tf && python3 ./example_tf_mnist.py"]
+                  args: ["cd /home/yourusername/test_tf && python3 ./example_tf_mnist.py"]

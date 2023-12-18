@@ -1,7 +1,7 @@
 apiVersion: kubeflow.org/v2beta1
 kind: MPIJob
 metadata:
-  name: googlenet-8cards
+  name: yourusername-bart-8cards
   namespace: default
 spec:
   slotsPerWorker: 8
@@ -15,7 +15,7 @@ spec:
           volumes:
             - name: mydir
               hostPath:
-                path: /home/yourusername
+                path: /home/youusername
                 type: Directory
             - name: scratch
               emptyDir: {}
@@ -26,7 +26,7 @@ spec:
           hostIPC: true
           containers:
             - image: vault.habana.ai/gaudi-docker/1.11.0/ubuntu22.04/habanalabs/pytorch-installer-2.0.1:latest
-              name: googlenet-launcher
+              name: bart-launcher
               volumeMounts:
                 - name: mydir
                   mountPath: /home
@@ -36,22 +36,21 @@ spec:
                   mountPath: /ceph
               env:
                 - name: dataset
-                  value: "/ceph/datasets/imagenet/ILSVRC2012"
+                  value: "/ceph/datasets/BART"
                 - name: output
-                  value: "/ceph/results/resnet/googlenet/8cards"
+                  value: "/ceph/results/BART/8cards"
               command: ["/bin/bash", "-c"]
               args:
                 - >-
-                  hl-smi;
                   declare -xr HOME='/scratch/tmp';
                   declare -xr NUM_NODES=1;
                   declare -xr NGPU_PER_NODE=8;
                   declare -xr N_CARDS=$((NUM_NODES*NGPU_PER_NODE));
 
-                  declare -xr RUN_PATH=/home/models/resnet/8cards;
-                  declare -xr MODEL_PATH=/scratch/Model-References/PyTorch/computer_vision/classification/torchvision;
+                  declare -xr RUN_PATH=/home/models/bart;
+                  declare -xr MODEL_PATH=/scratch/Model-References/PyTorch/nlp/BART/simpletransformers;
 
-                  declare -xr PYTHONPATH=$PYTHONPATH:/scratch/Model-References;
+                  declare -xr PYTHONPATH=/scratch/Model-References:/scratch/Model-References/PyTorch/nlp/BART/simpletransformers:$PYTHONPATH;
 
                   HOSTSFILE=${HOSTSFILE:-$OMPI_MCA_orte_default_hostfile};
                   declare -xr MASTER_ADDR=$(head -n 1 $HOSTSFILE | sed -n s/[[:space:]]slots.*//p);
@@ -68,21 +67,21 @@ spec:
                     -x HOME \
                     $RUN_PATH/setup.sh;
 
-                  declare -xr CMD="python3 $MODEL_PATH/main.py \
-                                   --data-path=${dataset} \
-                                   --model=googlenet \
-                                   --device=hpu \
-                                   --batch-size=256 \
-                                   --epochs=1 \
-                                   --lr=0.2828 \
-                                   --enable-lazy \
-                                   --print-interval=20 \
-                                   --dl-worker-type=HABANA \
-                                   --seed=123 \
-                                   --no-aux-logits \
-                                   --autocast  \
-                                   --workers=8";
-
+                  declare -xr CMD="python3 $MODEL_PATH/examples/seq2seq/paraphrasing/train.py \
+                                   --use_habana \
+                                   --lazy_mode \
+                                   --no_cuda \
+                                   --use_fused_adam \
+                                   --use_fused_clip_norm \
+                                   --max_seq_length 128 \
+                                   --train_batch_size 32 \
+                                   --num_train_epochs 5 \
+                                   --logging_steps 50 \
+                                   --save_best_model \
+                                   --output_dir ${output} \
+                                   --data_dir ${dataset} \
+                                   --bf16 autocast \
+                                   --distributed";
                   
                   mpirun -np ${N_CARDS} \
                     --allow-run-as-root \
@@ -96,8 +95,6 @@ spec:
                     -x PYTHONPATH \
                     -x HOME \
                     $CMD;
-
-                  mv checkpoint*.tar model*.tar ${output};
 
     Worker:
       replicas: 1
@@ -117,7 +114,7 @@ spec:
           hostIPC: true
           containers:
             - image: vault.habana.ai/gaudi-docker/1.11.0/ubuntu22.04/habanalabs/pytorch-installer-2.0.1:latest
-              name: googlenet-worker
+              name: bart-worker
               imagePullPolicy: Always
               resources:
                 limits:

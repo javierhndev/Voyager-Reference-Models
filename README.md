@@ -19,9 +19,10 @@ This repository contains the necessary files or links to run a collection of mod
 
 
 ## Natural Language processing
-| Models                      | Framework  | Multi-node |
-| --------------------------- | ---------- | ---------- |
-| [BERT](TensorFlow/nlp/bert) | TensorFlow |            |
+| Models                                 | Framework  | Multi-node |
+| -------------------------------------- | ---------- | ---------- |
+| [BART (fine-tuning)](PyTorch/nlp/BART) | Pytorch    |            |
+| [BERT](TensorFlow/nlp/bert)            | TensorFlow |            |
 
 ## Generative models
 | Models                                                         | Framework  | Multi-node |

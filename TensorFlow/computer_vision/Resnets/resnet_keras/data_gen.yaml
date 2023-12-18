@@ -9,7 +9,7 @@ spec:
                  emptyDir: {}
                - name: ceph
                  hostPath:
-                        path: /voyager/ceph/users/javierhn
+                        path: /voyager/ceph/users/yourusername
                         type: Directory
         containers:
                 - name: gaudi-container
