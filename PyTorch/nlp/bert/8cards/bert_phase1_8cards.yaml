@@ -1,0 +1,148 @@
+apiVersion: kubeflow.org/v2beta1
+kind: MPIJob
+metadata:
+  name: username-bert-8cards
+  namespace: default
+spec:
+  slotsPerWorker: 8
+  runPolicy:
+    cleanPodPolicy: Running
+  mpiReplicaSpecs:
+    Launcher:
+      replicas: 1
+      template:
+        spec:
+          volumes:
+            - name: mydir
+              hostPath:
+                path: /home/username
+                type: Directory
+            - name: scratch
+              emptyDir: {}
+            - name: ceph
+              hostPath:
+                path: /voyager/ceph/users/username
+                type: Directory
+          hostIPC: true
+          containers:
+            - image: vault.habana.ai/gaudi-docker/1.11.0/ubuntu22.04/habanalabs/pytorch-installer-2.0.1:latest
+              name: bert-launcher
+              volumeMounts:
+                - name: mydir
+                  mountPath: /home
+                - name: scratch
+                  mountPath: /scratch
+                - name: ceph
+                  mountPath: /ceph
+              env:
+                - name: dataset
+                  value: "/ceph/datasets/bert/pytorch"
+                - name: output
+                  value: "/ceph/results/bert_pytorch/8cards"
+                - name: dllog
+                  value: "/ceph/tmp/log_directory"
+              command: ["/bin/bash", "-c"]
+              args:
+                - >-
+                  declare -xr HOME='/scratch/tmp';
+                  declare -xr NUM_NODES=1;
+                  declare -xr NGPU_PER_NODE=8;
+                  declare -xr N_CARDS=$((NUM_NODES*NGPU_PER_NODE));
+
+                  declare -xr RUN_PATH=/home/models/bert_pytorch/8cards;
+                  declare -xr MODEL_PATH=/scratch/Model-References/PyTorch/nlp/bert;
+
+                  declare -xr PYTHONPATH=$PYTHONPATH:/scratch/Model-References;
+
+                  HOSTSFILE=${HOSTSFILE:-$OMPI_MCA_orte_default_hostfile};
+                  declare -xr MASTER_ADDR=$(head -n 1 $HOSTSFILE | sed -n s/[[:space:]]slots.*//p);
+                  declare -xr MASTER_PORT=${MASTER_PORT:-15566};
+
+                  echo $MASTER_ADDR;
+                  echo $MASTER_PORT;
+
+                  mpirun  --npernode 1 \
+                    --tag-output \
+                    --allow-run-as-root \
+                    --prefix $MPI_ROOT \
+                    -x MODEL_PATH \
+                    -x HOME \
+                    $RUN_PATH/setup.sh;
+
+                  declare -xr CMD="python3 $MODEL_PATH/run_pretraining.py \
+                                   --do_train \
+                                   --bert_model=bert-large-uncased \
+                                   --autocast \
+                                   --use_lazy_mode=True \
+                                   --config_file=$MODEL_PATH/bert_config.json \
+                                   --use_habana \
+                                   --allreduce_post_accumulation \
+                                   --allreduce_post_accumulation_fp16 \
+                                   --json-summary=${dllog}/dllogger.json \
+                                   --output_dir=${output} \
+                                   --use_fused_lamb \
+                                   --input_dir=${dataset}/hdf5_lower_case_1_seq_len_128_max_pred_20_masked_lm_prob_0.15_random_seed_12345_dupe_factor_5/wikicorpus_en \
+                                   --train_batch_size=8192 \
+                                   --max_seq_length=128 \
+                                   --max_predictions_per_seq=20 \
+                                   --warmup_proportion=0.2843 \
+                                   --max_steps=10 \
+                                   --num_steps_per_checkpoint=5 \
+                                   --learning_rate=0.006 \
+                                   --gradient_accumulation_steps=128 \
+                                   --enable_packed_data_mode False" ;
+                  
+                  
+
+                  mpirun -np ${N_CARDS} \
+                    --allow-run-as-root \
+                    --bind-to core \
+                    --map-by ppr:4:socket:PE=6 \
+                    -rank-by core --report-bindings \
+                    --tag-output \
+                    --merge-stderr-to-stdout --prefix $MPI_ROOT \
+                    -x MASTER_ADDR=$MASTER_ADDR \
+                    -x MASTER_PORT=$MASTER_PORT \
+                    -x PYTHONPATH \
+                    -x HOME \
+                    $CMD;
+
+    Worker:
+      replicas: 1
+      template:
+        spec:
+          volumes:
+            - name: mydir
+              hostPath:
+                path: /home/username
+                type: Directory
+            - name: scratch
+              emptyDir: {}
+            - name: ceph
+              hostPath:
+                path: /voyager/ceph/users/username
+                type: Directory
+          hostIPC: true
+          containers:
+            - image: vault.habana.ai/gaudi-docker/1.11.0/ubuntu22.04/habanalabs/pytorch-installer-2.0.1:latest
+              name: bert-worker
+              imagePullPolicy: Always
+              resources:
+                limits:
+                  habana.ai/gaudi: 8
+                  cpu: 95
+                  memory: 409Gi
+                  hugepages-2Mi: 95000Mi
+                requests:
+                  habana.ai/gaudi: 8
+                  cpu: 95
+                  memory: 409Gi
+                  hugepages-2Mi: 95000Mi
+              volumeMounts:
+                - name: mydir
+                  mountPath: /home
+                - name: scratch
+                  mountPath: /scratch
+                - name: ceph
+                  mountPath: /ceph
+ 

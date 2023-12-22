@@ -1,0 +1,51 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: datagen
+spec:
+  restartPolicy: Never
+  volumes:
+    - name: scratch
+      emptyDir: {}
+    - name: ceph
+      hostPath:
+        path: /voyager/ceph/users/yourusername
+        type: Directory
+  containers:
+    - name: gaudi-container
+      image: vault.habana.ai/gaudi-docker/1.11.0/ubuntu22.04/habanalabs/pytorch-installer-2.0.1:latest
+      volumeMounts:
+        - mountPath: /scratch
+          name: scratch
+        - mountPath: /ceph
+          name: ceph 
+      resources:
+        limits:
+          memory: 64G
+          cpu: 12
+          habana.ai/gaudi: 1
+          hugepages-2Mi: 95000Mi
+        requests:
+          memory: 64G
+          cpu: 12
+          habana.ai/gaudi: 1
+          hugepages-2Mi: 95000Mi
+      env:
+        - name: dataset
+          value: "/ceph/datasets/bert/pytorch"
+      command: ["/bin/sh","-c"]
+      args:
+        - hl-smi;
+          export HOME=/scratch/tmp;
+          mkdir -p /scratch/tmp/;
+          cd /ceph/temp;
+          export PYTHON=python3;
+          export PYTHONPATH=/ceph/temp/Model-References:/ceph/temp/Model-References/PyTorch/nlp/bert/:$PYTHONPATH;
+          cd Model-References/PyTorch/nlp/bert;
+          $PYTHON -m pip install -r requirements.txt;
+          pip install ipdb nltk progressbar html2text;
+          cd data;
+          pip install h5py boto3==1.26.75;
+          bash create_datasets_from_start.sh;
+
+

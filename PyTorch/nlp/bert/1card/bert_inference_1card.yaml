@@ -1,0 +1,69 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: bert
+spec:
+  restartPolicy: Never
+  volumes:
+    - name: scratch
+      emptyDir: {}
+    - name: ceph
+      hostPath:
+        path: /voyager/ceph/users/yourusername
+        type: Directory
+  containers:
+    - name: gaudi-container
+      image: vault.habana.ai/gaudi-docker/1.11.0/ubuntu22.04/habanalabs/pytorch-installer-2.0.1:latest
+      volumeMounts:
+        - mountPath: /scratch
+          name: scratch
+        - mountPath: /ceph
+          name: ceph 
+      resources:
+        limits:
+          memory: 32Gi
+          cpu: 12
+          habana.ai/gaudi: 1
+          hugepages-2Mi: 95000Mi
+        requests:
+          memory: 32G
+          cpu: 12
+          habana.ai/gaudi: 1
+          hugepages-2Mi: 95000Mi
+      env:
+        - name: dataset
+          value: "/ceph/datasets/bert/pytorch"
+        - name: init_ckpt
+          value: "/ceph/results/bert_pytorch/8cards"
+        - name: output
+          value: "/ceph/results/bert_pytorch/1card/inference"
+        - name: dllog
+          value: "/ceph/tmp/log_directory"
+        - name: vocab
+          value: "/ceph/datasets/bert/pytorch/uncased_L-24_H-1024_A-16"
+      command: ["/bin/sh","-c"]
+      args:
+        - >- 
+            hl-smi;
+            export HOME=/scratch/tmp;
+            mkdir -p /scratch/tmp/;
+            cd /scratch;
+            git clone -b 1.11.0 https://github.com/HabanaAI/Model-References;
+            export PYTHONPATH=/scratch/Model-References:$PYTHONPATH;
+            cd Model-References/PyTorch/nlp/bert;
+            pip install -r requirements.txt;
+            pip install h5py==3.10.0 boto3==1.26.75 git+https://github.com/NVIDIA/dllogger.git@26a0f8f1958de2c0c460925ff6102a4d2486d6cc;
+            
+            python3 run_squad.py --bert_model=bert-large-uncased --autocast \
+                    --use_hpu_graphs \
+                    --config_file=./bert_config.json \
+                    --use_habana --do_lower_case --output_dir=${output} \
+                    --json-summary=${dllog}/dllogger.json \
+                    --predict_batch_size=24 \
+                    --init_checkpoint=${init_ckpt}/ckpt_20.pt \
+                    --vocab_file=${vocab}/vocab.txt \
+                    --do_predict  \
+                    --predict_file=${dataset}/squad/v1.1/dev-v1.1.json \
+                    --do_eval --eval_script=${dataset}/squad/v1.1/evaluate-v1.1.py
+
+
