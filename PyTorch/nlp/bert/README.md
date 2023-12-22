@@ -125,11 +125,12 @@ Most of the parameters passed to the model are the same as in a single card. But
 The model can run in multiple nodes. Here we provide a `yaml` file example that runs in 4 nnodes (32 HPUs). The model parameters are exactly the same as in the `8cards` case. You can find, in the `32cards` folder, the `bert_phase1_32cards.yaml` and `bert_phase2_32cards.yaml` to run Phase1 and Phase2 respectively.
 
 
-### Fine-tuning
+## Fine-tuning
 **8 cards**
+
 You can use the `bert_ftuning_8cards.yaml` to perform the fine-tuning on the pretrained data. `--init_checkpoint` needs to point to the last checkpoint you run. The fine-tuning just requires a few minutes.
 
-### Inference
+## Inference
 Inference can be run in a single HPU. To run it (with HPU_graph) one can use the `bert_inference_1card.yaml` file. You need to modify the environment variable `vocab` to the path you store it. Similarly, the `init_ckpt` should point to the folder with your last checkpoint.
 
 It will execute: 
