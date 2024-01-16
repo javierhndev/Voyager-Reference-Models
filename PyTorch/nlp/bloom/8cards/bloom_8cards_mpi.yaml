@@ -1,0 +1,99 @@
+apiVersion: kubeflow.org/v2beta1
+kind: MPIJob
+metadata:
+  name: youruser-bloom-8cards
+  namespace: default
+spec:
+  slotsPerWorker: 8
+  runPolicy:
+    cleanPodPolicy: Running
+  mpiReplicaSpecs:
+    Launcher:
+      replicas: 1
+      template:
+        spec:
+          volumes:
+            - name: mydir
+              hostPath:
+                path: /home/youruser
+                type: Directory
+            - name: scratch
+              emptyDir: {}
+            - name: ceph
+              hostPath:
+                path: /voyager/ceph/users/youruser
+                type: Directory
+          hostIPC: true
+          containers:
+            - image: vault.habana.ai/gaudi-docker/1.11.0/ubuntu22.04/habanalabs/pytorch-installer-2.0.1:latest
+              name: bloom-launcher
+              volumeMounts:
+                - name: mydir
+                  mountPath: /home
+                - name: scratch
+                  mountPath: /scratch
+                - name: ceph
+                  mountPath: /ceph
+              env:
+                - name: dataset
+                  value: "/ceph/datasets/bloom/checkpoints"
+              command: ["/bin/bash", "-c"]
+              args:
+                - >-
+                  declare -xr NUM_NODES=1;
+
+                  declare -xr RUN_PATH=/home/models/bloom/8cards;
+                  declare -xr MODEL_ROOT=/scratch/Model-References;
+                  declare -xr MODEL_PATH=$MODEL_ROOT/PyTorch/nlp/bloom;
+
+                  $RUN_PATH/setup.sh;
+
+                  mpirun  --npernode 1 \
+                    --tag-output \
+                    --allow-run-as-root \
+                    --prefix $MPI_ROOT \
+                    -x MODEL_PATH \
+                    $RUN_PATH/setup.sh;
+
+                  $RUN_PATH/run_bloom.sh;
+
+
+    Worker:
+      replicas: 1
+      template:
+        spec:
+          volumes:
+            - name: mydir
+              hostPath:
+                path: /home/youruser
+                type: Directory
+            - name: scratch
+              emptyDir: {}
+            - name: ceph
+              hostPath:
+                path: /voyager/ceph/users/youruser
+                type: Directory
+          hostIPC: true
+          containers:
+            - image: vault.habana.ai/gaudi-docker/1.11.0/ubuntu22.04/habanalabs/pytorch-installer-2.0.1:latest
+              name: bloom-worker
+              imagePullPolicy: Always
+              resources:
+                limits:
+                  habana.ai/gaudi: 8
+                  cpu: 95
+                  memory: 409Gi
+                  hugepages-2Mi: 95000Mi
+                requests:
+                  habana.ai/gaudi: 8
+                  cpu: 95
+                  memory: 409Gi
+                  hugepages-2Mi: 95000Mi
+              volumeMounts:
+                - name: mydir
+                  mountPath: /home
+                - name: scratch
+                  mountPath: /scratch
+                - name: ceph
+                  mountPath: /ceph
+ 
