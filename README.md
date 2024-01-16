@@ -21,12 +21,12 @@ The list of models is being improved. Your feedback is greatly appreciated. Feel
 
 
 ## Natural Language processing
-| Models                                           | Framework  | Multi-node |
-| ------------------------------------------------ | ---------- | ---------- |
-| [BERT](PyTorch/nlp/bert)                         | Pytorch    |  Yes       |
-| [BART (fine-tuning)](PyTorch/nlp/BART)           | Pytorch    |            |
-| [Hugginface BLOOM (inference](PyTorch/nlp/bloom) | Pytorch    |            |
-| [BERT](TensorFlow/nlp/bert)                      | TensorFlow |            |
+| Models                                            | Framework  | Multi-node |
+| ------------------------------------------------- | ---------- | ---------- |
+| [BERT](PyTorch/nlp/bert)                          | Pytorch    |  Yes       |
+| [BART (fine-tuning)](PyTorch/nlp/BART)            | Pytorch    |            |
+| [Hugginface BLOOM (inference)](PyTorch/nlp/bloom) | Pytorch    |            |
+| [BERT](TensorFlow/nlp/bert)                       | TensorFlow |            |
 
 ## Generative models
 | Models                                                         | Framework  | Multi-node |
