@@ -1,5 +1,5 @@
 # LLaMA for PyTorch
-Here we provide the scripts and instructions to train LLaMa 2 7B model using Megatron-DeepSpeed. The code has been ported and to [Habana's HPUs](https://github.com/HabanaAI/Model-References/tree/1.11.0/PyTorch/nlp/DeepSpeedExamples/Megatron-DeepSpeed)
+Here we provide the scripts and instructions to train LLaMa 2 7B model using Megatron-DeepSpeed. The code has been ported to [Habana's HPUs](https://github.com/HabanaAI/Model-References/tree/1.11.0/PyTorch/nlp/DeepSpeedExamples/Megatron-DeepSpeed)
 
 ## Model overview
 
@@ -7,7 +7,7 @@ This implementation is based on [https://github.com/microsoft/Megatron-DeepSpeed
 
 ## Dataset
 
-We are using [Redpajama dataset](https://huggingface.co/datasets/togethercomputer/RedPajama-Data-1T) to train the LLaMA model. You can find it at
+We are using [Redpajama dataset](https://huggingface.co/datasets/togethercomputer/RedPajama-Data-1T) to train the LLaMA model. You can find it at:
 ```bash
 /voyager/ceph/users/czhao/datasets/llama/redpajama_tokenized
 ```
@@ -30,7 +30,7 @@ A patch needs to be applied to Habana's Model-References [repository](https://gi
 ```
 
 ## Training
-We provide in this folder the files needed to train the model. The `llama7b_16cards.yaml` is the one who will launch an MPIJob to run the model (in 16 cards in this case). Along the yaml file you should place the `setup.sh`, `run_llama.sh` and `training.sh`.
+We provide in this folder the files needed to train the model. The `llama7b_16cards.yaml` is the one who will launch an MPIJob to run the model (on 16 cards in this case). Along the yaml file you should place the `setup.sh`, `run_llama.sh` and `training.sh`.
 
 **Note**: In the `llama7b_16cards.yaml`, you need to specify the `RUN_PATH` which is the folder where you store these four files. Also, the `results` env variable may be changed to your desired folder.
 
@@ -49,7 +49,7 @@ The provided `yaml` file already usses 2 nodes but if, for example, you need to 
 
 
 ## Known Issues
-The image loaded in the container is based on Ubuntu 20.04. Some issues were observed if Ubuntu 22.04 was used.
+The image loaded in the container is based on Ubuntu 20.04. Some issues were observed when Ubuntu 22.04 was used.
 
 
 

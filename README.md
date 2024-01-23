@@ -1,5 +1,5 @@
 # Reference Models for Voyager
-This repository contains the necessary files or links to run a collection of models on Voyager at the San Diego Supercomputer Center (SDSC). The majority of those models are the ones supported by Intel Habana [link](https://github.com/HabanaAI/Model-References).
+This repository contains the necessary files and links to run a collection of models on Voyager at the San Diego Supercomputer Center (SDSC). The majority of those models are the ones supported by Intel Habana [link](https://github.com/HabanaAI/Model-References).
 
 The list of models is being improved. Your feedback is greatly appreciated. Feel free to open an issue or contact me (Javier Hernandez-Nicolau) at `javierhn *at* ucsd.edu`.
 
@@ -21,12 +21,13 @@ The list of models is being improved. Your feedback is greatly appreciated. Feel
 
 
 ## Natural Language processing
-| Models                                            | Framework  | Multi-node |
-| ------------------------------------------------- | ---------- | ---------- |
-| [BERT](PyTorch/nlp/bert)                          | Pytorch    |  Yes       |
-| [BART (fine-tuning)](PyTorch/nlp/BART)            | Pytorch    |            |
-| [Hugginface BLOOM (inference)](PyTorch/nlp/bloom) | Pytorch    |            |
-| [BERT](TensorFlow/nlp/bert)                       | TensorFlow |            |
+| Models                                                                        | Framework  | Multi-node |
+| ----------------------------------------------------------------------------- | ---------- | ---------- |
+| [BERT](PyTorch/nlp/bert)                                                      | Pytorch    |  Yes       |
+| [BART (fine-tuning)](PyTorch/nlp/BART)                                        | Pytorch    |            |
+| [Hugginface BLOOM (inference)](PyTorch/nlp/bloom)                             | Pytorch    |            |
+| [LLaMA (Megatron-DeepSpeed](PyTorch/nlp/DeepSpeedExamples/Megatron-DeepSpeed) | Pytorch    |  Yes       |
+| [BERT](TensorFlow/nlp/bert)                                                   | TensorFlow |            |
 
 ## Generative models
 | Models                                                         | Framework  | Multi-node |
