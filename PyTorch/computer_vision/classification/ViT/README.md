@@ -7,7 +7,7 @@ The model is supported by Intel-Habana. More details can be found in their [repo
 
 This is a PyTorch implementation of the Vision Transformer model described in [An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale](https://arxiv.org/abs/2010.11929) paper. It is based on an earlier implementation from [PyTorch Image Models(timm)](https://github.com/rwightman/pytorch-image-models) and the [official repository](https://github.com/google-research/vision_transformer).
 
-![fig1](./figure1.png)
+![fig1](figure1.png)
 
 The Vision Transformer model achieves State-of-the-Art in image recognition task with the standard Transformer encoder and fixed-size patches. To perform classification, you can use the standard approach of adding an extra learnable "classification token" to the sequence.
 
