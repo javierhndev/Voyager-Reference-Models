@@ -17,6 +17,7 @@ The list of models is being improved. Your feedback is greatly appreciated. Feel
 | [MobileNetV2](PyTorch/computer_vision/classification/torchvision)                     | Pytorch    |  Yes       |
 | [GoogLeNet](PyTorch/computer_vision/classification/torchvision)                       | Pytorch    |  Yes       |
 | [YOLOX](PyTorch/computer_vision/detection/yolox)                                      | Pytorch    |  Yes       |
+| [Vision Transformer](PyTorch/computer_vision/classification/ViT)                      | Pytorch    |  Yes       |
 | [UNet-2D](TensorFlow/computer_vision/Unet2D)                                          | TensorFlow |            |
 | [ResNet50 (Keras)](TensorFlow/computer_vision/Resnets/resnet_keras)                   | TensorFlow |  Yes       |
 
