@@ -20,16 +20,17 @@ The list of models is being improved. Your feedback is greatly appreciated. Feel
 | [Vision Transformer](PyTorch/computer_vision/classification/ViT)                      | Pytorch    |  Yes       |
 | [UNet-2D](TensorFlow/computer_vision/Unet2D)                                          | TensorFlow |            |
 | [ResNet50 (Keras)](TensorFlow/computer_vision/Resnets/resnet_keras)                   | TensorFlow |  Yes       |
+| [ResNeXt101](TensorFlow/computer_vision/Resnets/ResNeXt)                              | TensorFlow |  Yes       |
 
 
 ## Natural Language processing
-| Models                                                                        | Framework  | Multi-node |
-| ----------------------------------------------------------------------------- | ---------- | ---------- |
-| [BERT](PyTorch/nlp/bert)                                                      | Pytorch    |  Yes       |
-| [BART (fine-tuning)](PyTorch/nlp/BART)                                        | Pytorch    |            |
-| [Hugginface BLOOM (inference)](PyTorch/nlp/bloom)                             | Pytorch    |            |
-| [LLaMA (Megatron-DeepSpeed](PyTorch/nlp/DeepSpeedExamples/Megatron-DeepSpeed) | Pytorch    |  Yes       |
-| [BERT](TensorFlow/nlp/bert)                                                   | TensorFlow |            |
+| Models                                                                        | Framework  | Multi-node  |
+| ----------------------------------------------------------------------------- | ---------- | ----------- |
+| [BERT](PyTorch/nlp/bert)                                                      | Pytorch    |  Yes        |
+| [BART (fine-tuning)](PyTorch/nlp/BART)                                        | Pytorch    |             |
+| [Hugginface BLOOM (inference)](PyTorch/nlp/bloom)                             | Pytorch    | Single card |
+| [LLaMA (Megatron-DeepSpeed](PyTorch/nlp/DeepSpeedExamples/Megatron-DeepSpeed) | Pytorch    |  Yes        |
+| [BERT](TensorFlow/nlp/bert)                                                   | TensorFlow |             |
 
 ## Generative models
 | Models                                                         | Framework  | Multi-node |

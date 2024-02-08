@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: resnext
+spec:
+  restartPolicy: Never
+  volumes:
+    - name: scratch
+      emptyDir: {}
+    - name: dataset
+      hostPath:
+        path: /voyager/ceph/users/yourusername/datasets/imagenet/ILSVRC2012/tf_records
+        type: Directory
+        #- name: output
+        #hostPath:
+        #path: /voyager/ceph/users/yourusername/results/resnext_tf
+        #type: Directory
+  containers:
+    - name: gaudi-container
+      image: vault.habana.ai/gaudi-docker/1.11.0/ubuntu22.04/habanalabs/tensorflow-installer-tf-cpu-2.12.1:latest
+      volumeMounts:
+        - mountPath: /scratch
+          name: scratch
+        - mountPath: /dataset
+          name: dataset
+          #- mountPath: /output
+          #name: output
+      resources:
+        limits:
+          memory: 32G
+          cpu: 12
+          habana.ai/gaudi: 1
+          hugepages-2Mi: 95000Mi
+        requests:
+          memory: 32G
+          cpu: 12
+          habana.ai/gaudi: 1
+          hugepages-2Mi: 95000Mi
+          #env:
+          #- name: dataset
+          #value: "/ceph/datasets/bloom/checkpoints"
+      command: ["/bin/sh","-c"]
+      args:
+        - >-
+           hl-smi;
+           export HOME=/scratch/tmp;
+           export PATH=/scratch/tmp/.local/bin:$PATH;
+           export PYTHONPATH=/scratch/Model-References/:$PYTHONPATH;
+
+           mkdir -p /scratch/tmp/;
+           cd /scratch;
+           git clone -b 1.11.0 https://github.com/HabanaAI/Model-References;
+           cd Model-References/TensorFlow/computer_vision/Resnets/ResNeXt;
+           python3 -m pip install -r requirements.txt;
+           python3 imagenet_main.py -dt bf16 -dlit fp32 -bs 128 -te 90 -ebe 90 --data_dir /dataset
+           #python3 imagenet_main.py --helpfull;
+           
+         
+
