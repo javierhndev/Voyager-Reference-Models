@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: resnet50
+spec:
+  restartPolicy: Never
+  volumes:
+    - name: scratch
+      emptyDir: {}
+    - name: ceph
+      hostPath:
+         path: /voyager/ceph/users/yourusername
+         type: Directory
+  containers:
+    - name: gaudi-container
+      image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu22.04/habanalabs/pytorch-installer-2.1.0:latest
+      volumeMounts:
+        - mountPath: /scratch
+          name: scratch
+        - mountPath: /ceph
+          name: ceph 
+      resources:
+        limits:
+          memory: 32G
+          cpu: 6
+          habana.ai/gaudi: 1
+          hugepages-2Mi: 95000Mi
+        requests:
+          memory: 32G
+          cpu: 6
+          habana.ai/gaudi: 1
+          hugepages-2Mi: 95000Mi
+      env:
+       - name: dataset
+         value: "/ceph/datasets/imagenet/ILSVRC2012"
+      command: ["/bin/sh","-c"]
+      args:
+        - >-
+            hl-smi;
+            export HOME=/scratch/tmp;
+            cd /scratch;
+            mkdir -p tmp;
+            git clone -b 1.13.0 https://github.com/HabanaAI/Model-References;
+            cd Model-References/PyTorch/computer_vision/classification/lightning/resnet/;
+            pip install -r requirements.txt;
+            export PYTHONPATH=/scratch/Model-References:$PYTHONPATH;
+            python3 resnet50_PTL.py --batch_size 256\
+                     --data_path ${dataset} \
+                     --autocast \
+                     --custom_lr_values 0.1 0.01 0.001 0.0001 \
+                     --custom_lr_milestones 0 30 60 80 \
+                     --hpus 1 \
+                     --max_train_batches 500 \
+                     --epochs 2 ;
+                     
+  

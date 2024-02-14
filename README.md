@@ -6,33 +6,34 @@ The list of models is being improved. Your feedback is greatly appreciated. Feel
 ## Model list
 
 ## Simple examples
-- ['Hello World!'](helloworld): simplest example to run in Voyager.
+- ['Hello World!'](helloworld): simplest example to run on Voyager.
 - [Fashion-MNIST](TensorFlow/examples/Fashion-MNIST) model. It shows how to run a python script with TensorFlow.
 - [MPIJob](TensorFlow/examples/MPIJob) Learn how to run a MNIST model in multiple HPUs. 
 
 ## Computer Vision
-| Models                                                                                | Framework  | Multi-node |
-| ------------------------------------------------------------------------------------- | ---------- | ---------- |
-| [ResNet50, ResNet152, ResNeXt101](PyTorch/computer_vision/classification/torchvision) | Pytorch    |  Yes       |
-| [MobileNetV2](PyTorch/computer_vision/classification/torchvision)                     | Pytorch    |  Yes       |
-| [GoogLeNet](PyTorch/computer_vision/classification/torchvision)                       | Pytorch    |  Yes       |
-| [YOLOX](PyTorch/computer_vision/detection/yolox)                                      | Pytorch    |  Yes       |
-| [Vision Transformer](PyTorch/computer_vision/classification/ViT)                      | Pytorch    |  Yes       |
-| [UNet-2D](TensorFlow/computer_vision/Unet2D)                                          | TensorFlow |            |
-| [ResNet50 (Keras)](TensorFlow/computer_vision/Resnets/resnet_keras)                   | TensorFlow |  Yes       |
-| [ResNeXt101](TensorFlow/computer_vision/Resnets/ResNeXt)                              | TensorFlow |  Yes       |
+| Models                                                                                 | Framework  | Multi-node | Verified |
+| -------------------------------------------------------------------------------------- | ---------- | ---------- | -------- |
+| [ResNet50, ResNet152, ResNeXt101](PyTorch/computer_vision/classification/torchvision)  | Pytorch    |  Yes       |  1.11    |
+| [ResNet50 (Pytorch Lightning](PyTorch/computer_vision/classification/lightning/resnet) | Pytorch    |            |  1.13    |
+| [MobileNetV2](PyTorch/computer_vision/classification/torchvision)                      | Pytorch    |  Yes       |  1.11    |
+| [GoogLeNet](PyTorch/computer_vision/classification/torchvision)                        | Pytorch    |  Yes       |  1.11    |
+| [YOLOX](PyTorch/computer_vision/detection/yolox)                                       | Pytorch    |  Yes       |  1.11    |
+| [Vision Transformer](PyTorch/computer_vision/classification/ViT)                       | Pytorch    |  Yes       |  1.11    |
+| [UNet-2D](TensorFlow/computer_vision/Unet2D)                                           | TensorFlow |            |  1.11    |
+| [ResNet50 (Keras)](TensorFlow/computer_vision/Resnets/resnet_keras)                    | TensorFlow |  Yes       |  1.11    |
+| [ResNeXt101](TensorFlow/computer_vision/Resnets/ResNeXt)                               | TensorFlow |  Yes       |  1.11    |
 
 
 ## Natural Language processing
-| Models                                                                        | Framework  | Multi-node  |
-| ----------------------------------------------------------------------------- | ---------- | ----------- |
-| [BERT](PyTorch/nlp/bert)                                                      | Pytorch    |  Yes        |
-| [BART (fine-tuning)](PyTorch/nlp/BART)                                        | Pytorch    |             |
-| [Hugginface BLOOM (inference)](PyTorch/nlp/bloom)                             | Pytorch    | Single card |
-| [LLaMA (Megatron-DeepSpeed](PyTorch/nlp/DeepSpeedExamples/Megatron-DeepSpeed) | Pytorch    |  Yes        |
-| [BERT](TensorFlow/nlp/bert)                                                   | TensorFlow |             |
+| Models                                                                        | Framework  | Multi-node  | Verified |
+| ----------------------------------------------------------------------------- | ---------- | ----------- | -------- |
+| [BERT](PyTorch/nlp/bert)                                                      | Pytorch    |  Yes        |   1.11   |
+| [BART (fine-tuning)](PyTorch/nlp/BART)                                        | Pytorch    |             |   1.11   |
+| [Hugginface BLOOM (inference)](PyTorch/nlp/bloom)                             | Pytorch    |             |   1.11   |
+| [LLaMA (Megatron-DeepSpeed](PyTorch/nlp/DeepSpeedExamples/Megatron-DeepSpeed) | Pytorch    |  Yes        |   1.11   |
+| [BERT](TensorFlow/nlp/bert)                                                   | TensorFlow |             |   1.11   |
 
 ## Generative models
-| Models                                                         | Framework  | Multi-node |
-| -------------------------------------------------------------- | ---------- | ---------- |
-| [Stable-Diffusion](PyTorch/generative_models/stable-diffusion) | Pytorch    |            |
+| Models                                                         | Framework  | Multi-node | Verified |
+| -------------------------------------------------------------- | ---------- | ---------- | -------- |
+| [Stable-Diffusion](PyTorch/generative_models/stable-diffusion) | Pytorch    |            |   1.11   |
