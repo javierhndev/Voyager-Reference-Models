@@ -23,7 +23,7 @@ Right now the dataset is located in
 
 ## TRAINING
 
-###Single-card
+### Single-card
 
 A single Gaudi card is enough to test the model. You can find in this folder the `resnet_light_1card.yaml` file to run the model. Remember to modify the `dataset` environment to the location of your Imagenet2015 dataset.
 

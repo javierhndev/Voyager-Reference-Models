@@ -1,6 +1,8 @@
 # Reference Models for Voyager
 This repository contains the necessary files and links to run a collection of models on Voyager at the San Diego Supercomputer Center (SDSC). The majority of those models are the ones supported by Intel Habana [link](https://github.com/HabanaAI/Model-References).
 
+The last column on the list (*Verified*) indicates the last version of Synapse AI the model was tested on Voyager.
+
 The list of models is being improved. Your feedback is greatly appreciated. Feel free to open an issue or contact me (Javier Hernandez-Nicolau) at `javierhn *at* ucsd.edu`.
 
 ## Model list
@@ -11,17 +13,17 @@ The list of models is being improved. Your feedback is greatly appreciated. Feel
 - [MPIJob](TensorFlow/examples/MPIJob) Learn how to run a MNIST model in multiple HPUs. 
 
 ## Computer Vision
-| Models                                                                                 | Framework  | Multi-node | Verified |
-| -------------------------------------------------------------------------------------- | ---------- | ---------- | -------- |
-| [ResNet50, ResNet152, ResNeXt101](PyTorch/computer_vision/classification/torchvision)  | Pytorch    |  Yes       |  1.11    |
-| [ResNet50 (Pytorch Lightning](PyTorch/computer_vision/classification/lightning/resnet) | Pytorch    |            |  1.13    |
-| [MobileNetV2](PyTorch/computer_vision/classification/torchvision)                      | Pytorch    |  Yes       |  1.11    |
-| [GoogLeNet](PyTorch/computer_vision/classification/torchvision)                        | Pytorch    |  Yes       |  1.11    |
-| [YOLOX](PyTorch/computer_vision/detection/yolox)                                       | Pytorch    |  Yes       |  1.11    |
-| [Vision Transformer](PyTorch/computer_vision/classification/ViT)                       | Pytorch    |  Yes       |  1.11    |
-| [UNet-2D](TensorFlow/computer_vision/Unet2D)                                           | TensorFlow |            |  1.11    |
-| [ResNet50 (Keras)](TensorFlow/computer_vision/Resnets/resnet_keras)                    | TensorFlow |  Yes       |  1.11    |
-| [ResNeXt101](TensorFlow/computer_vision/Resnets/ResNeXt)                               | TensorFlow |  Yes       |  1.11    |
+| Models                                                                                  | Framework         | Multi-node | Verified |
+| --------------------------------------------------------------------------------------- | ----------------- | ---------- | -------- |
+| [ResNet50, ResNet152, ResNeXt101](PyTorch/computer_vision/classification/torchvision)   | Pytorch           |  Yes       |  1.11    |
+| [ResNet50 (Pytorch Lightning)](PyTorch/computer_vision/classification/lightning/resnet) | Pytorch Lightning |            |  1.13    |
+| [MobileNetV2](PyTorch/computer_vision/classification/torchvision)                       | Pytorch           |  Yes       |  1.11    |
+| [GoogLeNet](PyTorch/computer_vision/classification/torchvision)                         | Pytorch           |  Yes       |  1.11    |
+| [YOLOX](PyTorch/computer_vision/detection/yolox)                                        | Pytorch           |  Yes       |  1.11    |
+| [Vision Transformer](PyTorch/computer_vision/classification/ViT)                        | Pytorch           |  Yes       |  1.11    |
+| [UNet-2D](TensorFlow/computer_vision/Unet2D)                                            | TensorFlow        |            |  1.11    |
+| [ResNet50 (Keras)](TensorFlow/computer_vision/Resnets/resnet_keras)                     | TensorFlow        |  Yes       |  1.11    |
+| [ResNeXt101](TensorFlow/computer_vision/Resnets/ResNeXt)                                | TensorFlow        |  Yes       |  1.11    |
 
 
 ## Natural Language processing

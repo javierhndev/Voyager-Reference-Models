@@ -11,11 +11,13 @@ Our example runs in a single node with 8 HPUs. Note that, using PyTorch, `hostIP
 An initial checkpoint with the `first_stage_config` can be found in [https://ommer-lab.com/files/latent-diffusion/](https://ommer-lab.com/files/latent-diffusion/). Get the kl-f8.zip using `wget`, unzip it and save it somewhere in you Ceph folder. Remember to use the full path in `ckpt_path` when runing the model.
 
 ### Laion-2B-en dataset
+**At this moment, the LAION dataset is not available**
+<!---
 The training uses the [laion2B-en](https://huggingface.co/datasets/laion/laion2B-en) dataset.Habana Labs provides a method to download the dataset but since it is already in Voyager you can copy directly the 16k+ files and 700Gb+. The dataset is located right now in
 ```bash
 /voyager/ceph/users/javierhn/datasets/stable_diff/laion2B-en
 ```
-
+--->
 ## TRAINING
 
 **Run on 8 HPUs**
