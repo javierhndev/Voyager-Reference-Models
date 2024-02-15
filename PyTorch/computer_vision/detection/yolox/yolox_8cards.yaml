@@ -1,7 +1,7 @@
 apiVersion: kubeflow.org/v2beta1
 kind: MPIJob
 metadata:
-  name: yourusername-yolox-8cards
+  name: javierhn-yolox-8cards
   namespace: default
 spec:
   slotsPerWorker: 8
@@ -15,21 +15,21 @@ spec:
           volumes:
             - name: mydir
               hostPath:
-                path: /home/yourusername/models/voyager/yolox/multicard
+                path: /home/javierhn/models/voyager/yolox/1.13.0/multicard
                 type: Directory
             - name: scratch
               emptyDir: {}
             - name: dataset
               hostPath:
-                path: /voyager/ceph/users/yourusername/datasets/COCO
+                path: /voyager/ceph/users/javierhn/datasets/COCO
                 type: Directory
             - name: output
               hostPath:
-                path: /voyager/ceph/users/yourusername/results/yolox
+                path: /voyager/ceph/users/javierhn/results/yolox
                 type: Directory
           hostIPC: true
           containers:
-            - image: vault.habana.ai/gaudi-docker/1.11.0/ubuntu22.04/habanalabs/pytorch-installer-2.0.1:latest
+            - image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu22.04/habanalabs/pytorch-installer-2.1.0:latest
               name: yolox-launcher
               volumeMounts:
                 - name: mydir
@@ -47,6 +47,7 @@ spec:
               args:
                 - >-
                   declare -xr NUM_NODES=1;
+                  declare -xr SYNAPSE_AI_VER=1.13.0;
 
                   declare -xr RUN_PATH=/mydir;
                   declare -xr MODEL_ROOT=/scratch/Model-References;
@@ -58,6 +59,7 @@ spec:
                     --allow-run-as-root \
                     --prefix $MPI_ROOT \
                     -x MODEL_PATH \
+                    -x SYNAPSE_AI_VER \
                     $RUN_PATH/setup.sh;
 
                   $RUN_PATH/run_yolox.sh;
@@ -71,21 +73,21 @@ spec:
           volumes:
             - name: mydir
               hostPath:
-                path: /home/yourusername/models/voyager/yolox/multicard
+                path: /home/javierhn/models/voyager/yolox/1.13.0/multicard
                 type: Directory
             - name: scratch
               emptyDir: {}
             - name: dataset
               hostPath:
-                path: /voyager/ceph/users/yourusername/datasets/COCO
+                path: /voyager/ceph/users/javierhn/datasets/COCO
                 type: Directory
             - name: output
               hostPath:
-                path: /voyager/ceph/users/yourusername/results/yolox
+                path: /voyager/ceph/users/javierhn/results/yolox
                 type: Directory
           hostIPC: true
           containers:
-            - image: vault.habana.ai/gaudi-docker/1.11.0/ubuntu22.04/habanalabs/pytorch-installer-2.0.1:latest
+            - image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu22.04/habanalabs/pytorch-installer-2.1.0:latest
               name: bloom-worker
               imagePullPolicy: Always
               resources:

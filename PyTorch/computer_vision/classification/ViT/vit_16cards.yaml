@@ -15,7 +15,7 @@ spec:
           volumes:
             - name: mydir
               hostPath:
-                path: /home/yourusername/models/voyager/vit
+                path: /home/yourusername/models/voyager/vit_pt/1.13.0
                 type: Directory
             - name: scratch
               emptyDir: {}
@@ -33,7 +33,7 @@ spec:
                 type: Directory
           hostIPC: true
           containers:
-            - image: vault.habana.ai/gaudi-docker/1.11.0/ubuntu22.04/habanalabs/pytorch-installer-2.0.1:latest
+            - image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu22.04/habanalabs/pytorch-installer-2.1.0:latest
               name: vit-launcher
               volumeMounts:
                 - name: mydir
@@ -55,7 +55,7 @@ spec:
                   declare -xr NUM_NODES=2;
 
                   declare -xr RUN_PATH=/mydir;
-                  declare -xr SYNAPSE_AI_VER=1.11.0;
+                  declare -xr SYNAPSE_AI_VER=1.13.0;
                   declare -xr MODEL_ROOT=/scratch/Model-References;
                   declare -xr MODEL_PATH=$MODEL_ROOT/PyTorch/computer_vision/classification/ViT;
                   sleep 20s;
@@ -79,7 +79,7 @@ spec:
           volumes:
             - name: mydir
               hostPath:
-                path: /home/yourusername/models/voyager/vit
+                path: /home/yourusername/models/voyager/vit_pt/1.13.0
                 type: Directory
             - name: scratch
               emptyDir: {}
@@ -97,7 +97,7 @@ spec:
                 type: Directory
           hostIPC: true
           containers:
-            - image: vault.habana.ai/gaudi-docker/1.11.0/ubuntu22.04/habanalabs/pytorch-installer-2.0.1:latest
+            - image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu22.04/habanalabs/pytorch-installer-2.1.0:latest
               name: vit-worker
               imagePullPolicy: Always
               resources:

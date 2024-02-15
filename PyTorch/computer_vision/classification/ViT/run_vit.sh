@@ -33,7 +33,7 @@ CMD="python $MODEL_PATH/train.py \
 	--gradient_accumulation_steps 2 \
 	--img_size 384 \
 	--learning_rate 0.06 \
-	--hmp --hmp-opt-level O1 --hmp-bf16 $MODEL_PATH/ops_bf16.txt --hmp-fp32 $MODEL_PATH/ops_fp32.txt";
+	--autocast";
 
 
 mpirun -np ${N_CARDS} \

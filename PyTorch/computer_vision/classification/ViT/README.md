@@ -3,11 +3,11 @@ Here we provide the yaml files and instructions to train the Vision Transformer 
 
 ## Overview
 
-The model is supported by Intel-Habana. More details can be found in their [repository](https://github.com/HabanaAI/Model-References/tree/1.11.0/PyTorch/computer_vision/classification/ViT). This tutorial uses SynapseAI v1.11.
+The model is supported by Intel-Habana. More details can be found in their [repository](https://github.com/HabanaAI/Model-References/tree/1.13.0/PyTorch/computer_vision/classification/ViT). This tutorial uses SynapseAI v1.13.
 
 This is a PyTorch implementation of the Vision Transformer model described in [An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale](https://arxiv.org/abs/2010.11929) paper. It is based on an earlier implementation from [PyTorch Image Models(timm)](https://github.com/rwightman/pytorch-image-models) and the [official repository](https://github.com/google-research/vision_transformer).
 
-![fig1](https://github.com/HabanaAI/Model-References/blob/1.11.0/PyTorch/computer_vision/classification/ViT/img/figure1.png)
+![fig1](https://github.com/HabanaAI/Model-References/blob/1.13.0/PyTorch/computer_vision/classification/ViT/img/figure1.png)
 
 The Vision Transformer model achieves State-of-the-Art in image recognition task with the standard Transformer encoder and fixed-size patches. To perform classification, you can use the standard approach of adding an extra learnable "classification token" to the sequence.
 
@@ -16,7 +16,7 @@ The Vision Transformer model achieves State-of-the-Art in image recognition task
 
 ### Download the pre-trained model
 
-Google offers several pretrained models but, in this repository, we have tested the ViT-B_16(85.8M). For other supported models check [Habana's repository](https://github.com/HabanaAI/Model-References/tree/1.11.0/PyTorch/computer_vision/classification/ViT).
+Google offers several pretrained models but, in this repository, we have tested the ViT-B_16(85.8M). For other supported models check [Habana's repository](https://github.com/HabanaAI/Model-References/tree/1.13.0/PyTorch/computer_vision/classification/ViT).
 
 To download the ViT-B_16 model (imagenet21k pre-train):
 ```bash
@@ -64,7 +64,7 @@ python $MODEL_PATH/train.py \
         --gradient_accumulation_steps 2 \
         --img_size 384 \
         --learning_rate 0.06 \
-        --hmp --hmp-opt-level O1 --hmp-bf16 $MODEL_PATH/ops_bf16.txt --hmp-fp32 $MODEL_PATH/ops_fp32.txt
+        --autocast
 ```
 The `ViT-B_16` model runs with batch size 64, gradient accumulation 2.
 

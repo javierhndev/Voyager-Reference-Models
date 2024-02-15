@@ -1,11 +1,15 @@
 #!/bin/sh
 
+hl-smi;
+
 cd /scratch;
 
-git clone -b 1.11.0 https://github.com/HabanaAI/Model-References;
+#mkdir -p /scratch/tmp;
+
+git clone -b $SYNAPSE_AI_VER https://github.com/HabanaAI/Model-References;
 
 cd $MODEL_PATH;
 
 pip install -r $MODEL_PATH/requirements.txt;
 
-pip install -v -e;
+pip install -v -e .;
