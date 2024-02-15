@@ -3,7 +3,7 @@ Here we provide the yaml files and instructions to train ResNet50, ResNet152, Re
 
 ## Overview
 
-The models are supported by Habana. More details can be found in their [repository](https://github.com/HabanaAI/Model-References/tree/master/PyTorch/computer_vision/classification/torchvision). This tutorial uses SynapseAI v1.11. The base model used here is actually from [GitHub: PyTorch-Vision](https://github.com/pytorch/vision/tree/release/0.10/torchvision/models) which has been modifed by Habana Labs. The following models have been tested on Voyager:
+The models are supported by Habana. More details can be found in their [repository](https://github.com/HabanaAI/Model-References/tree/master/PyTorch/computer_vision/classification/torchvision). This tutorial uses SynapseAI v1.13. The base model used here is actually from [GitHub: PyTorch-Vision](https://github.com/pytorch/vision/tree/release/0.10/torchvision/models) which has been modifed by Habana Labs. The following models have been tested on Voyager:
 
 - ResNet50
 - ResNet152

@@ -1,49 +1,50 @@
 apiVersion: v1
 kind: Pod
 metadata:
-        name: mobilenetv2
+  name: mobilenetv2
 spec:
-        restartPolicy: Never
-        volumes:
-               - name: scratch
-                 emptyDir: {}
-               - name: ceph
-                 hostPath:
-                        path: /voyager/ceph/users/yourusername
-                        type: Directory
-        containers:
-                - name: gaudi-container
-                  image: vault.habana.ai/gaudi-docker/1.11.0/ubuntu22.04/habanalabs/pytorch-installer-2.0.1:latest
-                  volumeMounts:
-                         - mountPath: /scratch
-                           name: scratch
-                         - mountPath: /ceph
-                           name: ceph 
-                  resources:
-                         limits:
-                                memory: 32G
-                                cpu: 6
-                                habana.ai/gaudi: 1
-                                hugepages-2Mi: 95000Mi
-                         requests:
-                                memory: 32G
-                                cpu: 6
-                                habana.ai/gaudi: 1
-                                hugepages-2Mi: 95000Mi
-                  env:
-                    - name: dataset
-                      value: "/ceph/datasets/imagenet/ILSVRC2012"
-                    - name: output
-                      value: "/ceph/results/resnet/mobilenetv2/1card"
-                  command: ["/bin/sh","-c"]
-                  args:
-                    - hl-smi;
-                      export HOME=/scratch/tmp;
-                      cd /scratch;
-                      mkdir -p tmp;
-                      git clone -b 1.11.0 https://github.com/HabanaAI/Model-References;
-                      cd Model-References/PyTorch/computer_vision/classification/torchvision;
-                      export PYTHONPATH=/scratch/Model-References:$PYTHONPATH;
-                      pip install -r requirements.txt;
-                      python3 -u train.py --batch-size 256 --model mobilenet_v2 --device hpu --print-freq 10 --deterministic --data-path ${dataset} --output-dir ${output} --save-checkpoint --epochs 1 --autocast --dl-time-exclude=False --lr 0.045 --wd 0.00004 --lr-step-size 1 --lr-gamma 0.98 --momentum 0.9
+  restartPolicy: Never
+  volumes:
+    - name: scratch
+      emptyDir: {}
+    - name: ceph
+      hostPath:
+        path: /voyager/ceph/users/yourusername
+        type: Directory
+  containers:
+    - name: gaudi-container
+      image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu22.04/habanalabs/pytorch-installer-2.1.0:latest
+      volumeMounts:
+        - mountPath: /scratch
+          name: scratch
+        - mountPath: /ceph
+          name: ceph 
+      resources:
+        limits:
+          memory: 32G
+          cpu: 6
+          habana.ai/gaudi: 1
+          hugepages-2Mi: 95000Mi
+        requests:
+          memory: 32G
+          cpu: 6
+          habana.ai/gaudi: 1
+          hugepages-2Mi: 95000Mi
+      env:
+        - name: dataset
+          value: "/ceph/datasets/imagenet/ILSVRC2012"
+        - name: output
+          value: "/ceph/results/resnet/mobilenetv2/1card"
+      command: ["/bin/sh","-c"]
+      args:
+        - >-
+          hl-smi;
+          export HOME=/scratch/tmp;
+          cd /scratch;
+          mkdir -p tmp;
+          git clone -b 1.13.0 https://github.com/HabanaAI/Model-References;
+          cd Model-References/PyTorch/computer_vision/classification/torchvision;
+          export PYTHONPATH=/scratch/Model-References:$PYTHONPATH;
+          pip install -r requirements.txt;
+          python3 -u train.py --batch-size 256 --model mobilenet_v2 --device hpu --print-freq 10 --deterministic --data-path ${dataset} --output-dir ${output} --save-checkpoint --epochs 1 --autocast --dl-time-exclude=False --lr 0.045 --wd 0.00004 --lr-step-size 1 --lr-gamma 0.98 --momentum 0.9
 

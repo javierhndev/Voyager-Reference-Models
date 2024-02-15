@@ -1,50 +1,51 @@
 apiVersion: v1
 kind: Pod
 metadata:
-        name: resnet152
+  name: resnet152
 spec:
-        restartPolicy: Never
-        volumes:
-               - name: scratch
-                 emptyDir: {}
-               - name: ceph
-                 hostPath:
-                        path: /voyager/ceph/users/yourusername
-                        type: Directory
-        containers:
-                - name: gaudi-container
-                  image: vault.habana.ai/gaudi-docker/1.11.0/ubuntu22.04/habanalabs/pytorch-installer-2.0.1:latest
-                  volumeMounts:
-                         - mountPath: /scratch
-                           name: scratch
-                         - mountPath: /ceph
-                           name: ceph 
-                  resources:
-                         limits:
-                                memory: 32G
-                                cpu: 6
-                                habana.ai/gaudi: 1
-                                hugepages-2Mi: 95000Mi
-                         requests:
-                                memory: 32G
-                                cpu: 6
-                                habana.ai/gaudi: 1
-                                hugepages-2Mi: 95000Mi
-                  env:
-                    - name: dataset
-                      value: "/ceph/datasets/imagenet/ILSVRC2012"
-                    - name: output
-                      value: "/ceph/results/resnet/resnet152/1card"
-                  command: ["/bin/sh","-c"]
-                  args:
-                    - hl-smi;
-                      export HOME=/scratch/tmp;
-                      cd /scratch;
-                      mkdir -p tmp;
-                      git clone -b 1.11.0 https://github.com/HabanaAI/Model-References;
-                      cd Model-References/PyTorch/computer_vision/classification/torchvision;
-                      export PYTHONPATH=/scratch/Model-References:$PYTHONPATH;
-                      pip install -r requirements.txt;
-                      python3 -u train.py --dl-worker-type HABANA --batch-size 128 --model resnet152 --device hpu --workers 8 --print-freq 20 --dl-time-exclude False --deterministic --data-path ${dataset} --output-dir ${output} --save-checkpoint --epochs 1 --autocast --lr 0.1 --custom-lr-values 0.1 0.01 0.001 0.0001 --custom-lr-milestones 0 30 60 80 
+  restartPolicy: Never
+  volumes:
+    - name: scratch
+      emptyDir: {}
+    - name: ceph
+      hostPath:
+        path: /voyager/ceph/users/yourusername
+        type: Directory
+  containers:
+    - name: gaudi-container
+      image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu22.04/habanalabs/pytorch-installer-2.1.0:latest
+      volumeMounts:
+        - mountPath: /scratch
+          name: scratch
+        - mountPath: /ceph
+          name: ceph 
+      resources:
+        limits:
+          memory: 32G
+          cpu: 6
+          habana.ai/gaudi: 1
+          hugepages-2Mi: 95000Mi
+        requests:
+          memory: 32G
+          cpu: 6
+          habana.ai/gaudi: 1
+          hugepages-2Mi: 95000Mi
+      env:
+        - name: dataset
+          value: "/ceph/datasets/imagenet/ILSVRC2012"
+        - name: output
+          value: "/ceph/results/resnet/resnet152/1card"
+      command: ["/bin/sh","-c"]
+      args:
+        - >-
+          hl-smi;
+          export HOME=/scratch/tmp;
+          cd /scratch;
+          mkdir -p tmp;
+          git clone -b 1.13.0 https://github.com/HabanaAI/Model-References;
+          cd Model-References/PyTorch/computer_vision/classification/torchvision;
+          export PYTHONPATH=/scratch/Model-References:$PYTHONPATH;
+          pip install -r requirements.txt;
+          python3 -u train.py --dl-worker-type HABANA --batch-size 128 --model resnet152 --device hpu --workers 8 --print-freq 20 --dl-time-exclude False --deterministic --data-path ${dataset} --output-dir ${output} --save-checkpoint --epochs 1 --autocast --lr 0.1 --custom-lr-values 0.1 0.01 0.001 0.0001 --custom-lr-milestones 0 30 60 80 
 
 
