@@ -1,7 +1,7 @@
 apiVersion: kubeflow.org/v2beta1
 kind: MPIJob
 metadata:
-  name: yourusername-resnext-8cards
+  name: yourusername-resnet-8cards
   namespace: default
 spec:
   slotsPerWorker: 8
@@ -15,7 +15,7 @@ spec:
           volumes:
             - name: mydir
               hostPath:
-                path: /home/yourusername/models/voyager/resnext_tf/1.13.0
+                path: /home/yourusername/models/voyager/resnet_keras/1.13.0/multicard
                 type: Directory
             - name: scratch
               emptyDir: {}
@@ -25,12 +25,11 @@ spec:
                 type: Directory
             - name: output
               hostPath:
-                path: /voyager/ceph/users/yourusername/results/resnext_tf
+                path: /voyager/ceph/users/yourusername/results/resnet_keras/8cards
                 type: Directory
-          hostIPC: true
           containers:
             - image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu22.04/habanalabs/tensorflow-installer-tf-cpu-2.13.1
-              name: resnext-launcher
+              name: resnet-launcher
               volumeMounts:
                 - name: mydir
                   mountPath: /mydir
@@ -40,18 +39,24 @@ spec:
                   mountPath: /dataset
                 - name: output
                   mountPath: /output
-                  #env:
+                  # env:
                   #- name: dataset
-                  #value: "/ceph/datasets/bloom/checkpoints"
+                  # value: "/ceph/datasets/imagenet/ILSVRC2012/tf_records"
+                  #- name: output
+                  #value: "/ceph/results/resnet_keras/8cards"                
               command: ["/bin/bash", "-c"]
               args:
                 - >-
                   declare -xr NUM_NODES=1;
+                  declare -xr NGPU_PER_NODE=8;
+                  declare -xr N_CARDS=$((NUM_NODES*NGPU_PER_NODE));
 
                   declare -xr RUN_PATH=/mydir;
                   declare -xr SYNAPSE_AI_VER=1.13.0;
-                  declare -xr MODEL_ROOT=/scratch/Model-References;
-                  declare -xr MODEL_PATH=$MODEL_ROOT/TensorFlow/computer_vision/Resnets/ResNeXt;
+                  declare -xr MODEL_PATH=/scratch/Model-References/TensorFlow/computer_vision/Resnets/resnet_keras;
+
+                  declare -xr PYTHONPATH=$PYTHONPATH:/scratch/Model-References;
+
                   sleep 20s;
 
                   mpirun  --npernode 1 \
@@ -62,9 +67,34 @@ spec:
                     -x SYNAPSE_AI_VER \
                     $RUN_PATH/setup.sh;
 
-                  $RUN_PATH/run_resnext.sh;
-                  #sleep infinity;
+                  declare -xr CMD="python3 $MODEL_PATH/resnet_ctl_imagenet_main.py \
+                                   --dtype bf16 \
+                                   --data_loader_image_type bf16 \
+                                   --use_horovod \
+                                   -te 40 \
+                                   -ebe 40 \
+                                   -bs 256 \
+                                   --optimizer LARS \
+                                   --base_learning_rate 9.5 \
+                                   --warmup_epochs 3 \
+                                   --lr_schedule polynomial \
+                                   --label_smoothing 0.1 \
+                                   --weight_decay 0.0001 \
+                                   --single_l2_loss_op \
+                                   --data_dir /dataset \
+                                   --model_dir /output \
+                                   --enable_tensorboard";
+                  
 
+                  mpirun -np ${N_CARDS} \
+                    --allow-run-as-root \
+                    --bind-to core \
+                    --map-by ppr:4:socket:PE=6 \
+                    -rank-by core --report-bindings \
+                    --tag-output \
+                    --merge-stderr-to-stdout --prefix $MPI_ROOT \
+                    -x PYTHONPATH \
+                    $CMD;
 
     Worker:
       replicas: 1
@@ -73,7 +103,7 @@ spec:
           volumes:
             - name: mydir
               hostPath:
-                path: /home/yourusername/models/voyager/resnext_tf/1.13.0
+                path: /home/yourusername/models/voyager/resnet_keras/1.13.0/multicard
                 type: Directory
             - name: scratch
               emptyDir: {}
@@ -83,11 +113,11 @@ spec:
                 type: Directory
             - name: output
               hostPath:
-                path: /voyager/ceph/users/yourusername/results/resnext_tf
+                path: /voyager/ceph/users/yourusername/results/resnet_keras/8cards
                 type: Directory
           containers:
             - image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu22.04/habanalabs/tensorflow-installer-tf-cpu-2.13.1
-              name: resnext-worker
+              name: resnet-worker
               imagePullPolicy: Always
               resources:
                 limits:

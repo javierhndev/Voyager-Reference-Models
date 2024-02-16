@@ -7,34 +7,40 @@ spec:
   volumes:
     - name: scratch
       emptyDir: {}
-    - name: ceph
+    - name: dataset
       hostPath:
-        path: /voyager/ceph/users/yourusername
+        path: /voyager/ceph/users/yourusername/datasets/imagenet/ILSVRC2012/tf_records
+        type: Directory
+    - name: output
+      hostPath:
+        path: /voyager/ceph/users/yourusername/results/resnet_keras/1card
         type: Directory
   containers:
     - name: gaudi-container
-      image: vault.habana.ai/gaudi-docker/1.11.0/ubuntu22.04/habanalabs/tensorflow-installer-tf-cpu-2.12.1:latest
+      image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu22.04/habanalabs/tensorflow-installer-tf-cpu-2.13.1
       volumeMounts:
         - mountPath: /scratch
           name: scratch
-        - mountPath: /ceph
-          name: ceph 
+        - mountPath: /dataset
+          name: dataset 
+        - mountPath: /output
+          name: output 
       resources:
         limits:
           memory: 32G
-          cpu: 6
+          cpu: 12
           habana.ai/gaudi: 1
           hugepages-2Mi: 95000Mi
         requests:
           memory: 32G
-          cpu: 6
+          cpu: 12
           habana.ai/gaudi: 1
           hugepages-2Mi: 95000Mi
-      env:
-        - name: dataset
-          value: "/ceph/datasets/imagenet/ILSVRC2012/tf_records"
-        - name: output
-          value: "/ceph/results/resnet_keras/1card"
+          #env:
+          #- name: dataset
+          #value: "/ceph/datasets/imagenet/ILSVRC2012/tf_records"
+          #- name: output
+          #value: "/ceph/results/resnet_keras/1card"
       command: ["/bin/sh","-c"]
       args:
          - hl-smi;
@@ -42,9 +48,9 @@ spec:
            export HOME=/scratch/tmp;
            cd /scratch;
            mkdir -p tmp;
-           git clone -b 1.11.0 https://github.com/HabanaAI/Model-References;
+           git clone -b 1.13.0 https://github.com/HabanaAI/Model-References;
            export PYTHONPATH=$PYTHONPATH:/scratch/Model-References/;
            cd /scratch/Model-References/TensorFlow/computer_vision/Resnets/resnet_keras;
            python3 -m pip install -r requirements.txt;
-           python3 resnet_ctl_imagenet_main.py -bs 256 -te 40 -ebe 40 -dt bf16 --data_dir ${dataset} --model_dir ${output} --optimizer LARS --base_learning_rate 2.5 --warmup_epochs 3 --lr_schedule polynomial --label_smoothing 0.1 --weight_decay 0.0001  --single_l2_loss_op --enable_tensorboard;
+           python3 resnet_ctl_imagenet_main.py -bs 256 -te 40 -ebe 40 -dt bf16 --data_dir /dataset --model_dir /output --optimizer LARS --base_learning_rate 2.5 --warmup_epochs 3 --lr_schedule polynomial --label_smoothing 0.1 --weight_decay 0.0001  --single_l2_loss_op --enable_tensorboard;
 

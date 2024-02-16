@@ -7,42 +7,48 @@ spec:
   volumes:
     - name: scratch
       emptyDir: {}
-    - name: ceph
+    - name: dataset
       hostPath:
-        path: /voyager/ceph/users/yourusername
+        path: /voyager/ceph/users/yourusername/datasets/UNet2D_tf
+        type: Directory
+    - name: output
+      hostPath:
+        path: /voyager/ceph/users/yourusername/results/unet2d_tf
         type: Directory
   containers:
     - name: gaudi-container
-      image: vault.habana.ai/gaudi-docker/1.11.0/ubuntu22.04/habanalabs/tensorflow-installer-tf-cpu-2.12.1:latest
+      image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu22.04/habanalabs/tensorflow-installer-tf-cpu-2.13.1
       volumeMounts:
         - mountPath: /scratch
           name: scratch
-        - mountPath: /ceph
-          name: ceph 
+        - mountPath: /dataset
+          name: dataset 
+        - mountPath: /output
+          name: output 
       resources:
         limits:
           memory: 32G
-          cpu: 6
+          cpu: 12
           habana.ai/gaudi: 1
           hugepages-2Mi: 95000Mi
         requests:
           memory: 32G
-          cpu: 6
+          cpu: 12
           habana.ai/gaudi: 1
           hugepages-2Mi: 95000Mi
-      env:
-        - name: dataset
-          value: "/ceph/datasets/UNet2D_tf"
-        - name: out
-          value: "/ceph/results/unet2d_tf"
+          #env:
+          #- name: dataset
+          #value: "/ceph/datasets/UNet2D_tf"
+          #- name: out
+          #value: "/ceph/results/unet2d_tf"
       command: ["/bin/sh","-c"]
       args:
          - hl-smi;
-           export HOME=/scratch/tmp;
+           export HOME=/scratch/tmp/yourusername;
            cd /scratch;
-           mkdir -p tmp;
-           git clone -b 1.11.0 https://github.com/HabanaAI/Model-References;
+           mkdir -p tmp/yourusername;
+           git clone -b 1.13.0 https://github.com/HabanaAI/Model-References;
            export PYTHONPATH=$PYTHONPATH:/scratch/Model-References/;
            cd /scratch/Model-References/TensorFlow/computer_vision/Unet2D;
            python3 -m pip install -r requirements.txt;
-           python3 unet2d.py --data_dir ${dataset} --batch_size 8 --dtype bf16 --model_dir ${out} --fold 0 --tensorboard_logging;
+           python3 unet2d.py --data_dir /dataset --batch_size 8 --dtype bf16 --model_dir /output --fold 0 --tensorboard_logging;

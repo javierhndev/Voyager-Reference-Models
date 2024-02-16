@@ -1,7 +1,7 @@
 apiVersion: kubeflow.org/v2beta1
 kind: MPIJob
 metadata:
-  name: yourusername-resnet-8cards
+  name: yourusername-unet2d-16cards
   namespace: default
 spec:
   slotsPerWorker: 8
@@ -15,69 +15,66 @@ spec:
           volumes:
             - name: mydir
               hostPath:
-                path: /home/yourusername
+                path: /home/yourusername/models/voyager/unet2d_tf/1.13.0
                 type: Directory
             - name: scratch
               emptyDir: {}
-            - name: ceph
+            - name: dataset
               hostPath:
-                path: /voyager/ceph/users/yourusername
+                path: /voyager/ceph/users/yourusername/datasets/UNet2D_tf
+                type: Directory
+            - name: output
+              hostPath:
+                path: /voyager/ceph/users/yourusername/results/unet2d_tf/16cards
                 type: Directory
           containers:
-            - image: vault.habana.ai/gaudi-docker/1.11.0/ubuntu22.04/habanalabs/tensorflow-installer-tf-cpu-2.12.1:latest
-              name: resnet-launcher
+            - image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu22.04/habanalabs/tensorflow-installer-tf-cpu-2.13.1
+              name: unet2d-launcher
               volumeMounts:
                 - name: mydir
-                  mountPath: /home
+                  mountPath: /mydir
                 - name: scratch
                   mountPath: /scratch
-                - name: ceph
-                  mountPath: /ceph
-              env:
                 - name: dataset
-                  value: "/ceph/datasets/imagenet/ILSVRC2012/tf_records"
+                  mountPath: /dataset
                 - name: output
-                  value: "/ceph/results/resnet_keras/8cards"                
+                  mountPath: /output
+                  #env:
+                  #- name: dataset
+                  #value: "/ceph/datasets/UNet2D_tf"
+                  #- name: out
+                  #value: "/ceph/results/unet2d_tf/8cards"                
               command: ["/bin/bash", "-c"]
               args:
                 - >-
-                  declare -xr HOME='/scratch/tmp';
-                  declare -xr NUM_NODES=1;
+                  declare -xr NUM_NODES=2;
                   declare -xr NGPU_PER_NODE=8;
                   declare -xr N_CARDS=$((NUM_NODES*NGPU_PER_NODE));
 
-                  declare -xr RUN_PATH=/home/models/resnet_keras/8cards;
-                  declare -xr MODEL_PATH=/scratch/Model-References/TensorFlow/computer_vision/Resnets/resnet_keras;
+                  declare -xr RUN_PATH=/mydir;
+                  declare -xr SYNAPSE_AI_VER=1.13.0;
+                  declare -xr MODEL_PATH=/scratch/Model-References/TensorFlow/computer_vision/Unet2D;
 
                   declare -xr PYTHONPATH=$PYTHONPATH:/scratch/Model-References;
 
+                  sleep 20s;
 
                   mpirun  --npernode 1 \
                     --tag-output \
                     --allow-run-as-root \
                     --prefix $MPI_ROOT \
                     -x MODEL_PATH \
-                    -x HOME \
+                    -x SYNAPSE_AI_VER \
                     $RUN_PATH/setup.sh;
 
-                  declare -xr CMD="python3 $MODEL_PATH/resnet_ctl_imagenet_main.py \
+                  declare -xr CMD="python3 $MODEL_PATH/unet2d.py --data_dir /dataset \
+                                   --batch_size 8 \
                                    --dtype bf16 \
-                                   --data_loader_image_type bf16 \
-                                   --use_horovod \
-                                   -te 40 \
-                                   -ebe 40 \
-                                   -bs 256 \
-                                   --optimizer LARS \
-                                   --base_learning_rate 9.5 \
-                                   --warmup_epochs 3 \
-                                   --lr_schedule polynomial \
-                                   --label_smoothing 0.1 \
-                                   --weight_decay 0.0001 \
-                                   --single_l2_loss_op \
-                                   --data_dir ${dataset} \
-                                   --model_dir ${output} \
-                                   --enable_tensorboard";
-                  
+                                   --model_dir /output \
+                                   --fold 0 \
+                                   --tensorboard_logging \
+                                   --log_all_workers \
+                                   --use_horovod";
 
                   mpirun -np ${N_CARDS} \
                     --allow-run-as-root \
@@ -87,27 +84,30 @@ spec:
                     --tag-output \
                     --merge-stderr-to-stdout --prefix $MPI_ROOT \
                     -x PYTHONPATH \
-                    -x HOME \
                     $CMD;
 
     Worker:
-      replicas: 1
+      replicas: 2
       template:
         spec:
           volumes:
             - name: mydir
               hostPath:
-                path: /home/yourusername
+                path: /home/yourusername/models/voyager/unet2d_tf/1.13.0
                 type: Directory
             - name: scratch
               emptyDir: {}
-            - name: ceph
+            - name: dataset
               hostPath:
-                path: /voyager/ceph/users/yourusername
+                path: /voyager/ceph/users/yourusername/datasets/UNet2D_tf
+                type: Directory
+            - name: output
+              hostPath:
+                path: /voyager/ceph/users/yourusername/results/unet2d_tf/16cards
                 type: Directory
           containers:
-            - image: vault.habana.ai/gaudi-docker/1.11.0/ubuntu20.04/habanalabs/tensorflow-installer-tf-cpu-2.12.1:latest
-              name: resnet-worker
+            - image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu22.04/habanalabs/tensorflow-installer-tf-cpu-2.13.1
+              name: unet2d-worker
               imagePullPolicy: Always
               resources:
                 limits:
@@ -122,9 +122,11 @@ spec:
                   hugepages-2Mi: 95000Mi
               volumeMounts:
                 - name: mydir
-                  mountPath: /home
+                  mountPath: /mydir
                 - name: scratch
                   mountPath: /scratch
-                - name: ceph
-                  mountPath: /ceph
+                - name: dataset
+                  mountPath: /dataset
+                - name: output
+                  mountPath: /output
  

@@ -1,8 +1,8 @@
 # UNet-2D model using TensorFlow
 
-Here we provide the scripts and instructions to download the dataset and train the ResNet50 Keras model on Voyager using TensorFlow.  The model is mantained by Habanai Labs and you can find it in their [repository](https://github.com/HabanaAI/Model-References/tree/1.11.0/TensorFlow/computer_vision/Resnets/resnet_keras). Please check their repository for a deeper explanation of the model. The ResNet Keras model is a modified version of the original model located in [TensorFlow Model Garden](https://github.com/tensorflow/models/tree/master/official/legacy/image_classification/resnet). It uses a custom training loop, supports 50 layers and can work with both SGD and LARS optimizers.
+Here we provide the scripts and instructions to download the dataset and train the ResNet50 Keras model on Voyager using TensorFlow.  The model is mantained by Habanai Labs and you can find it in their [repository](https://github.com/HabanaAI/Model-References/tree/1.13.0/TensorFlow/computer_vision/Resnets/resnet_keras). Please check their repository for a deeper explanation of the model. The ResNet Keras model is a modified version of the original model located in [TensorFlow Model Garden](https://github.com/tensorflow/models/tree/master/official/legacy/image_classification/resnet). It uses a custom training loop, supports 50 layers and can work with both SGD and LARS optimizers.
 
-The model was verified on Voyager with SynapseAI version 1.11.
+The model was verified on Voyager with SynapseAI version 1.13.
 
 ## Data downloading and preparation
 
@@ -82,22 +82,22 @@ The dataset is located now in:
 ## Training
 ### Single Card
 
-In the `1card` folder you can find the `resnet_keras.yaml` and `resnete_keras_lars.yaml` that you can use to launch a pod that runs the ResNet model on a single HPU with or without the LARS optimizer. Note that the yaml file defines two environment variables: `dataset` and `output` (where the output will be written). You should modify the path to your own dataset and output folders.
+In the `1card` folder you can find the `resnet_keras.yaml` and `resnete_keras_lars.yaml` that you can use to launch a pod that runs the ResNet model on a single HPU with or without the LARS optimizer. Note that the yaml file defines two volumes: `dataset` and `output` (where the output will be written). You should modify the path to your own dataset and output folders.
 
 - `resnet_keras.yaml` example: 1 HPU, batch 256, 90 epochs, BF16 precision, SGD will execute:
   ```bash
-  python3 resnet_ctl_imagenet_main.py -dt bf16 -dlit bf16 -te 90 -ebe 90 -bs 256 --data_dir ${dataset} --model_dir ${output} --enable_tensorboard
+  python3 resnet_ctl_imagenet_main.py -dt bf16 -dlit bf16 -te 90 -ebe 90 -bs 256 --data_dir /dataset --model_dir /output --enable_tensorboard
   ```
 
 - `resnet_keras_lars.yaml` example: 1 HPU, batch 256, 40 epochs, BF16 precision, LARS. It will execute:
   ```bash
-  python3 resnet_ctl_imagenet_main.py -bs 256 -te 40 -ebe 40 -dt bf16 --data_dir ${dataset} --model_dir ${output} --optimizer LARS --base_learning_rate 2.5 --warmup_epochs 3 --lr_schedule polynomial --label_smoothing 0.1 --weight_decay 0.0001  --single_l2_loss_op --enable_tensorboard;
+  python3 resnet_ctl_imagenet_main.py -bs 256 -te 40 -ebe 40 -dt bf16 --data_dir /dataset --model_dir /output --optimizer LARS --base_learning_rate 2.5 --warmup_epochs 3 --lr_schedule polynomial --label_smoothing 0.1 --weight_decay 0.0001  --single_l2_loss_op --enable_tensorboard;
   ```
 
 
 ### 8 Cards (single node)
 
-To run on 8 HPUs you can use the `resnet_keras_8cards.yaml` located in th `8cards` folder. It will launch an MPIJob that will run in a single node (8 HPUs) using Horovod. The `yaml` file requires the `setup.sh` which should be saved next to it. Then, in the `yaml` file you should modify the `RUN_PATH` variable to match the location of the `setup.sh`. Note that, as for the single HPU, you also need to specify the right folders for `dataset` and `out` files.
+To run on 8 HPUs you can use the `resnet_keras_8cards.yaml` located in the `multicard` folder. It will launch an MPIJob that will run in a single node (8 HPUs) using Horovod. The `yaml` file requires the `setup.sh` which should be saved next to it. Then, in the `yaml` file you should modify the `mydir` volume to match the location of the `setup.sh`. Note that, as for the single HPU, you also need to specify the right folders for `dataset` and `output` files.
 
 - In this example: 8 HPUs on 1 server, batch 256, 40 epochs, BF16 precision, LARS:   
   ```bash
@@ -115,13 +115,13 @@ To run on 8 HPUs you can use the `resnet_keras_8cards.yaml` located in th `8card
          --label_smoothing 0.1 \
          --weight_decay 0.0001 \
          --single_l2_loss_op \
-         --data_dir ${dataset} \
-         --model_dir ${output} \
+         --data_dir /dataset \
+         --model_dir /output \
          --enable_tensorboard
   ```
 ### 16 cards (multi-node)
 
-To run on 16 HPUs (two nodes) you can use the `resnet_keras_16cards.yaml` located in th `16cards` folder. It has very few modifications compared to the `8cards`. In summary
+To run on 16 HPUs (two nodes) you can use the `resnet_keras_16cards.yaml` located in th `multicard` folder. It has very few modifications compared to the `8cards`. In summary
 ```bash
  declare -xr NUM_NODES=2;
 ```

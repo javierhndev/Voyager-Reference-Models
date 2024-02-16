@@ -17,7 +17,7 @@ spec:
         #type: Directory
   containers:
     - name: gaudi-container
-      image: vault.habana.ai/gaudi-docker/1.11.0/ubuntu22.04/habanalabs/tensorflow-installer-tf-cpu-2.12.1:latest
+      image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu22.04/habanalabs/tensorflow-installer-tf-cpu-2.13.1
       volumeMounts:
         - mountPath: /scratch
           name: scratch
@@ -49,7 +49,7 @@ spec:
 
            mkdir -p /scratch/tmp/;
            cd /scratch;
-           git clone -b 1.11.0 https://github.com/HabanaAI/Model-References;
+           git clone -b 1.13.0 https://github.com/HabanaAI/Model-References;
            cd Model-References/TensorFlow/computer_vision/Resnets/ResNeXt;
            python3 -m pip install -r requirements.txt;
            python3 imagenet_main.py -dt bf16 -dlit fp32 -bs 128 -te 90 -ebe 90 --data_dir /dataset

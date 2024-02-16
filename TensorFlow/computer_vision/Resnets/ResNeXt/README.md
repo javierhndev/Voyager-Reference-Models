@@ -4,7 +4,7 @@ Here we provide the yaml files and instructions to train the ResNeXt model (Tens
 
 ## Overview
 
-The model is supported by Intel-Habana. More details can be found in their [repository](https://github.com/HabanaAI/Model-References/tree/1.11.0/TensorFlow/computer_vision/Resnets/ResNeXt). This tutorial uses SynapseAI v1.11.
+The model is supported by Intel-Habana. More details can be found in their [repository](https://github.com/HabanaAI/Model-References/tree/1.13.0/TensorFlow/computer_vision/Resnets/ResNeXt). This tutorial uses SynapseAI v1.13.
 
 ResNeXt is a modified version of the original ResNet v1 model. This implementation defines ResNeXt101 which features 101 layers.
 

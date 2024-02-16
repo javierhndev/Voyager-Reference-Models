@@ -15,7 +15,7 @@ spec:
           volumes:
             - name: mydir
               hostPath:
-                path: /home/yourusername/models/voyager/resnext_tf
+                path: /home/yourusername/models/voyager/resnext_tf/1.13.0
                 type: Directory
             - name: scratch
               emptyDir: {}
@@ -29,7 +29,7 @@ spec:
                 type: Directory
           hostIPC: true
           containers:
-            - image: vault.habana.ai/gaudi-docker/1.11.0/ubuntu22.04/habanalabs/tensorflow-installer-tf-cpu-2.12.1:latest
+            - image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu22.04/habanalabs/tensorflow-installer-tf-cpu-2.13.1
               name: resnext-launcher
               volumeMounts:
                 - name: mydir
@@ -49,10 +49,10 @@ spec:
                   declare -xr NUM_NODES=2;
 
                   declare -xr RUN_PATH=/mydir;
-                  declare -xr SYNAPSE_AI_VER=1.11.0;
+                  declare -xr SYNAPSE_AI_VER=1.13.0;
                   declare -xr MODEL_ROOT=/scratch/Model-References;
                   declare -xr MODEL_PATH=$MODEL_ROOT/TensorFlow/computer_vision/Resnets/ResNeXt;
-                  sleep 60s;
+                  sleep 20s;
 
                   mpirun  --npernode 1 \
                     --tag-output \
@@ -63,7 +63,7 @@ spec:
                     $RUN_PATH/setup.sh;
 
                   $RUN_PATH/run_resnext.sh;
-                  sleep infinity;
+                  #sleep infinity;
 
 
     Worker:
@@ -73,7 +73,7 @@ spec:
           volumes:
             - name: mydir
               hostPath:
-                path: /home/yourusername/models/voyager/resnext_tf
+                path: /home/yourusername/models/voyager/resnext_tf/1.13.0
                 type: Directory
             - name: scratch
               emptyDir: {}
@@ -85,9 +85,8 @@ spec:
               hostPath:
                 path: /voyager/ceph/users/yourusername/results/resnext_tf
                 type: Directory
-          hostIPC: true
           containers:
-            - image: vault.habana.ai/gaudi-docker/1.11.0/ubuntu22.04/habanalabs/tensorflow-installer-tf-cpu-2.12.1:latest
+            - image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu22.04/habanalabs/tensorflow-installer-tf-cpu-2.13.1
               name: resnext-worker
               imagePullPolicy: Always
               resources:
