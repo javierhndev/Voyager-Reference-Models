@@ -5,11 +5,16 @@
 set -ex
 
 
+
+
+#HOME='/scratch/tmp';
 NUM_NODES=${NUM_NODES:-1};
 NGPU_PER_NODE=8;
 N_CARDS=$((NUM_NODES*NGPU_PER_NODE));
 
+#MODEL_PATH=/scratch/Model-References/PyTorch/nlp/bloom;
 PYTHONPATH=$PYTHONPATH:$MODEL_ROOT;
+#PATH=/scratch/tmp/.local/bin:$PATH;
 
 HOSTSFILE=${HOSTSFILE:-$OMPI_MCA_orte_default_hostfile};
 MASTER_ADDR=$(head -n 1 $HOSTSFILE | sed -n s/[[:space:]]slots.*//p);
@@ -31,11 +36,11 @@ MODEL_BLOOM=bloom-7b1;
 #big one MODEL_BLOOM=bloom;
 
 CMD="python $MODEL_PATH/bloom.py \
-     --weights ${dataset} \
+     --weights /dataset \
      --model ${MODEL_BLOOM} \
      --options "max_length=128" \
      --dtype bf16 \
-     'Do you like Christmas?' ";
+     'Do robots think?' ";
 
 deepspeed --force_multi \
           --num_nodes ${NUM_NODES} \

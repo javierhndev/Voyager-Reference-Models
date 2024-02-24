@@ -1,7 +1,7 @@
 apiVersion: kubeflow.org/v2beta1
 kind: MPIJob
 metadata:
-  name: yourusername-bart-8cards
+  name: yourusername-bart-16cards
   namespace: default
 spec:
   slotsPerWorker: 8
@@ -25,7 +25,7 @@ spec:
                 type: Directory
             - name: output
               hostPath:
-                path: /voyager/ceph/users/yourusername/results/BART/8cards
+                path: /voyager/ceph/users/yourusername/results/BART/16cards
                 type: Directory
           hostIPC: true
           containers:
@@ -48,7 +48,7 @@ spec:
               command: ["/bin/bash", "-c"]
               args:
                 - >-
-                  declare -xr NUM_NODES=1;
+                  declare -xr NUM_NODES=2;
                   declare -xr NGPU_PER_NODE=8;
                   declare -xr N_CARDS=$((NUM_NODES*NGPU_PER_NODE));
 
@@ -105,7 +105,7 @@ spec:
                   sleep infinity;
 
     Worker:
-      replicas: 1
+      replicas: 2
       template:
         spec:
           volumes:

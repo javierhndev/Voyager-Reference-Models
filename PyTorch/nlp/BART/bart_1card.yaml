@@ -7,45 +7,51 @@ spec:
   volumes:
     - name: scratch
       emptyDir: {}
-    - name: ceph
+    - name: dataset
       hostPath:
-        path: /voyager/ceph/users/yourusername
+        path: /voyager/ceph/users/yourusername/datasets/BART
+        type: Directory
+    - name: output
+      hostPath:
+        path: /voyager/ceph/users/yourusername/results/BART/1card
         type: Directory
   containers:
     - name: gaudi-container
-      image: vault.habana.ai/gaudi-docker/1.11.0/ubuntu22.04/habanalabs/pytorch-installer-2.0.1:latest
+      image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu22.04/habanalabs/pytorch-installer-2.1.0:latest
       volumeMounts:
         - mountPath: /scratch
           name: scratch
-        - mountPath: /ceph
-          name: ceph 
+        - mountPath: /dataset
+          name: dataset 
+        - mountPath: /output
+          name: output 
       resources:
         limits:
           memory: 32G
-          cpu: 6
+          cpu: 12
           habana.ai/gaudi: 1
           hugepages-2Mi: 95000Mi
         requests:
           memory: 32G
-          cpu: 6
+          cpu: 12
           habana.ai/gaudi: 1
           hugepages-2Mi: 95000Mi
-      env:
-        - name: dataset
-          value: "/ceph/datasets/BART"
-        - name: output
-          value: "/ceph/results/BART/1card"
+          #env:
+          #- name: dataset
+          #value: "/ceph/datasets/BART"
+          #- name: output
+          #value: "/ceph/results/BART/1card"
       command: ["/bin/sh","-c"]
       args:
         - hl-smi;
           export HOME=/scratch/tmp;
           mkdir -p /scratch/tmp/;
           cd /scratch;
-          git clone -b 1.11.0 https://github.com/HabanaAI/Model-References;
+          git clone -b 1.13.0 https://github.com/HabanaAI/Model-References;
           export PYTHONPATH=/scratch/Model-References:/scratch/Model-References/PyTorch/nlp/BART/simpletransformers:$PYTHONPATH;
           cd Model-References/PyTorch/nlp/BART/simpletransformers;
           pip install -e .;
           pip install bert_score;
-          python3 examples/seq2seq/paraphrasing/train.py --use_habana --no_cuda --use_fused_adam --use_fused_clip_norm --max_seq_length 128 --train_batch_size 32 --num_train_epochs 5 --save_best_model --data_dir ${dataset} --output_dir ${output} --bf16 autocast
+          python3 examples/seq2seq/paraphrasing/train.py --use_habana --no_cuda --use_fused_adam --use_fused_clip_norm --max_seq_length 128 --train_batch_size 32 --num_train_epochs 5 --save_best_model --data_dir /dataset --output_dir /output --bf16 autocast
 
 

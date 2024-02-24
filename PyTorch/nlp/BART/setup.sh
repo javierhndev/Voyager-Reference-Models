@@ -2,9 +2,9 @@
 
 cd /scratch;
 
-mkdir -p /scratch/tmp;
+#mkdir -p /scratch/tmp;
 
-git clone -b 1.11.0 https://github.com/HabanaAI/Model-References;
+git clone -b $SYNAPSE_AI_VER https://github.com/HabanaAI/Model-References;
 
 cd $MODEL_PATH;
 

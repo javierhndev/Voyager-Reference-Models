@@ -1,5 +1,5 @@
 # Inference of BLOOM using PyTorch
-This directory provides the yaml files and instructions to run inference on different BLOOM models. The models were developed and trained by Hugginface. They were ported to [Habana's HPU accelerator](https://github.com/HabanaAI/Model-References/tree/1.11.0/PyTorch/nlp/bloom).
+This directory provides the yaml files and instructions to run inference on different BLOOM models. The models were developed and trained by Hugginface. They were ported to [Habana's HPU accelerator](https://github.com/HabanaAI/Model-References/tree/1.13.0/PyTorch/nlp/bloom).
 
 ## Model overview
 
@@ -29,12 +29,13 @@ In the `1card` folder you can find the `bloom-3b_1card.yaml` which can be used t
 ```bash
 export HOME=/scratch/tmp;
 export PYTHONPATH=/scratch/Model-References:$PYTHONPATH;
+export PATH=/scratch/tmp/.local/bin:$PATH;
 mkdir -p /scratch/tmp/;
 cd /scratch;
-git clone -b 1.11.0 https://github.com/HabanaAI/Model-References;
+git clone -b 1.13.0 https://github.com/HabanaAI/Model-References;
 cd Model-References/PyTorch/nlp/bloom;
 python3 -m pip install -r requirements.txt;
-python3 ./bloom.py --weights ${dataset} --model bloom-3b --options "max_length=32" "Do you like Christmas?";
+python3 ./bloom.py --weights /dataset --model bloom-3b --options "max_length=32" "Do robots think?";
 ``` 
 The last command executes the main script. `--model` determines the model we want to use, `max_length` is the total length of the reply (including the prompt) and the last argument is the prompt itself. Remember to modify the `dataset` variable to the location of your checkpoints.
 
@@ -43,7 +44,7 @@ To run in multiple cards we need an MPIJob. In the `8cards` folder you can find 
 
 In the `yaml` file you need to modify:
 - The location of your `dataset`.
-- The `RUN_PATH` folder which is where you have the `run_bloom.sh` and `setup.sh` scripts. 
+- The `mydir` folder which is where you have the `run_bloom.sh` and `setup.sh` scripts. 
 
 Note that the model needs `DeepSpeed` which is installed when the `setup.sh` is exectued.
 

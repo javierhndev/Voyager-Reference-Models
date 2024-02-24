@@ -7,18 +7,18 @@ spec:
   volumes:
     - name: scratch
       emptyDir: {}
-    - name: ceph
+    - name: dataset
       hostPath:
-        path: /voyager/ceph/users/youruser
+        path: /voyager/ceph/users/yourusername/datasets/bloom/checkpoints
         type: Directory
   containers:
     - name: gaudi-container
-      image: vault.habana.ai/gaudi-docker/1.11.0/ubuntu22.04/habanalabs/pytorch-installer-2.0.1:latest
+      image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu22.04/habanalabs/pytorch-installer-2.1.0:latest
       volumeMounts:
         - mountPath: /scratch
           name: scratch
-        - mountPath: /ceph
-          name: ceph 
+        - mountPath: /dataset
+          name: dataset 
       resources:
         limits:
           memory: 32G
@@ -30,20 +30,21 @@ spec:
           cpu: 12
           habana.ai/gaudi: 1
           hugepages-2Mi: 95000Mi
-      env:
-        - name: dataset
-          value: "/ceph/datasets/bloom/checkpoints"
+          #env:
+          #- name: dataset
+          #value: "/ceph/datasets/bloom/checkpoints"
       command: ["/bin/sh","-c"]
       args:
         - hl-smi;
           export HOME=/scratch/tmp;
           export PYTHONPATH=/scratch/Model-References:$PYTHONPATH;
+          export PATH=/scratch/tmp/.local/bin:$PATH;
           mkdir -p /scratch/tmp/;
           cd /scratch;
-          git clone -b 1.11.0 https://github.com/HabanaAI/Model-References;
+          git clone -b 1.13.0 https://github.com/HabanaAI/Model-References;
           cd Model-References/PyTorch/nlp/bloom;
           python3 -m pip install -r requirements.txt;
-          python3 ./bloom.py --weights ${dataset} --model bloom-3b --options "max_length=32" "Do you like Christmas?";
+          python3 ./bloom.py --weights /dataset --model bloom-3b --options "max_length=32" "Do robots think?";
 
          
 
