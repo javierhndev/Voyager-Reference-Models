@@ -32,7 +32,7 @@ The list of models is being improved. Your feedback is greatly appreciated. Feel
 | [BERT](PyTorch/nlp/bert)                                                      | Pytorch    |  Yes        |   1.11   |
 | [BART (fine-tuning,simpletransformers)](PyTorch/nlp/BART)                     | Pytorch    |  Yes        |   1.13   |
 | [Hugginface BLOOM (inference)](PyTorch/nlp/bloom)                             | Pytorch    |             |   1.13   |
-| [LLaMA (Megatron-DeepSpeed](PyTorch/nlp/DeepSpeedExamples/Megatron-DeepSpeed) | Pytorch    |  Yes        |   1.11   |
+| [LLaMA (Megatron-DeepSpeed](PyTorch/nlp/DeepSpeedExamples/Megatron-DeepSpeed) | Pytorch    |  Yes        |   1.13   |
 | [BERT](TensorFlow/nlp/bert)                                                   | TensorFlow |             |   1.11   |
 
 ## Generative models

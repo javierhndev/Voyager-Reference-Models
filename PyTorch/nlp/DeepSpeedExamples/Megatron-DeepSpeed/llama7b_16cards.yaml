@@ -1,7 +1,7 @@
 apiVersion: kubeflow.org/v2beta1
 kind: MPIJob
 metadata:
-  name: youruser-llama-16cards
+  name: yourusername-llama-16cards
   namespace: default
 spec:
   slotsPerWorker: 8
@@ -15,13 +15,13 @@ spec:
           volumes:
             - name: mydir
               hostPath:
-                path: /home/youruser
+                path: /home/yourusername/models/voyager/llama/1.13
                 type: Directory
             - name: scratch
               emptyDir: {}
-            - name: ceph
+            - name: output
               hostPath:
-                path: /voyager/ceph/users/youruser
+                path: /voyager/ceph/users/yourusername/results/llama/1.13
                 type: Directory
             - name: dataset
               hostPath:
@@ -29,28 +29,29 @@ spec:
                 type: Directory
           hostIPC: true
           containers:
-            - image: vault.habana.ai/gaudi-docker/1.11.0/ubuntu20.04/habanalabs/pytorch-installer-2.0.1:latest
+            - image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu20.04/habanalabs/pytorch-installer-2.1.0:latest
               name: llama-launcher
               volumeMounts:
                 - name: mydir
-                  mountPath: /home
+                  mountPath: /mydir
                 - name: scratch
                   mountPath: /scratch
-                - name: ceph
-                  mountPath: /ceph
+                - name: output
+                  mountPath: /output
                 - name: dataset
                   mountPath: /dataset
-              env:
-                - name: results
-                  value: "/ceph/results/llama"
+                  #env:
+                  #- name: results
+                  #value: "/ceph/results/llama"
               command: ["/bin/bash", "-c"]
               args:
                 - >-
                   declare -xr NUM_NODES=2;
-
-                  declare -xr RUN_PATH=/home/models/llama;
+                  declare -xr SYNAPSE_AI_VER=1.13.0;
+                  declare -xr RUN_PATH=/mydir;
                   declare -xr MODEL_ROOT=/scratch/Model-References;
                   declare -xr MODEL_PATH=$MODEL_ROOT/PyTorch/nlp/DeepSpeedExamples/Megatron-DeepSpeed;
+
                   declare -xr HL_DATA_DIR_ROOT=/dataset;
                   declare -xr HL_LLAMA_VER=7;
                   declare -xr ZERO_STAGE=0;
@@ -69,6 +70,7 @@ spec:
                     --allow-run-as-root \
                     --prefix $MPI_ROOT \
                     -x MODEL_PATH \
+                    -x SYNAPSE_AI_VER \
                     -x RUN_PATH \
                     $RUN_PATH/setup.sh;
 
@@ -83,13 +85,13 @@ spec:
           volumes:
             - name: mydir
               hostPath:
-                path: /home/youruser
+                path: /home/yourusername/models/voyager/llama/1.13
                 type: Directory
             - name: scratch
               emptyDir: {}
-            - name: ceph
+            - name: output
               hostPath:
-                path: /voyager/ceph/users/youruser
+                path: /voyager/ceph/users/yourusername/results/llama/1.13
                 type: Directory
             - name: dataset
               hostPath:
@@ -97,7 +99,7 @@ spec:
                 type: Directory
           hostIPC: true
           containers:
-            - image: vault.habana.ai/gaudi-docker/1.11.0/ubuntu20.04/habanalabs/pytorch-installer-2.0.1:latest
+            - image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu20.04/habanalabs/pytorch-installer-2.1.0:latest
               name: llama-worker
               imagePullPolicy: Always
               resources:
@@ -113,11 +115,11 @@ spec:
                   hugepages-2Mi: 95000Mi
               volumeMounts:
                 - name: mydir
-                  mountPath: /home
+                  mountPath: /mydir
                 - name: scratch
                   mountPath: /scratch
-                - name: ceph
-                  mountPath: /ceph
+                - name: output
+                  mountPath: /output
                 - name: dataset
                   mountPath: /dataset
  

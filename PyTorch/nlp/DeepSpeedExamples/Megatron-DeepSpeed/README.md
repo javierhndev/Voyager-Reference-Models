@@ -1,5 +1,5 @@
 # LLaMA for PyTorch
-Here we provide the scripts and instructions to train LLaMa 2 7B model using Megatron-DeepSpeed. The code has been ported to [Habana's HPUs](https://github.com/HabanaAI/Model-References/tree/1.11.0/PyTorch/nlp/DeepSpeedExamples/Megatron-DeepSpeed)
+Here we provide the scripts and instructions to train LLaMa 7B model using Megatron-DeepSpeed. The code has been ported to [Habana's HPUs](https://github.com/HabanaAI/Model-References/tree/1.13.0/PyTorch/nlp/DeepSpeedExamples/Megatron-DeepSpeed)
 
 ## Model overview
 
@@ -12,27 +12,11 @@ We are using [Redpajama dataset](https://huggingface.co/datasets/togethercompute
 /voyager/ceph/users/czhao/datasets/llama/redpajama_tokenized
 ```
 
-## Setup
-A patch needs to be applied to Habana's Model-References [repository](https://github.com/HabanaAI/Model-References/tree/1.11.0/PyTorch/nlp/DeepSpeedExamples/Megatron-DeepSpeed). In particular, a few lines of code need to be added to `/megatron/training.py`. For convenience, the fixed `training.py` is located in this folder and the yaml will automatically copy it (but needs to be placed on `RUN_PATH`) before execution. The following lines have been added:
-```bash
-...
-  unwrapped_model = unwrap_model(model,
-                                (torchDDP, LocalDDP, Float16Module))
-+  if args.use_hpu:
-+      unwrapped_model = [m.to('hpu') for m in unwrapped_model]
-+  if mpu.get_pipeline_model_parallel_world_size() == 1:
-+      args.eval_micro_batch_size = args.micro_batch_size
-
-  if args.inference:
-      optimizer = None
-      lr_scheduler = None
-...
-```
 
 ## Training
-We provide in this folder the files needed to train the model. The `llama7b_16cards.yaml` is the one who will launch an MPIJob to run the model (on 16 cards in this case). Along the yaml file you should place the `setup.sh`, `run_llama.sh` and `training.sh`.
+We provide in this folder the files needed to train the model. The `llama7b_16cards.yaml` will launch an MPIJob to run the model (on 16 cards in this case). Along the yaml file you should place the `setup.sh` and `run_llama.sh`.
 
-**Note**: In the `llama7b_16cards.yaml`, you need to specify the `RUN_PATH` which is the folder where you store these four files. Also, the `results` env variable may be changed to your desired folder.
+**Note**: In the `llama7b_16cards.yaml`, you need to specify the `my_path` which is the folder where you store these three files. Also, the  `output`  variable should be changed to your desired folder. Change them in BOTH launcher AND worker.
 
 To run the LLaMA model:
 ```bash
