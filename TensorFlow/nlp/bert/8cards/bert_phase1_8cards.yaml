@@ -15,76 +15,89 @@ spec:
           volumes:
             - name: mydir
               hostPath:
-                path: /home/yourusername
+                path: /home/yourusername/models/voyager/bert_tf/1.13/8cards
                 type: Directory
             - name: scratch
               emptyDir: {}
-            - name: ceph
+            - name: dataset
               hostPath:
-                path: /voyager/ceph/users/yourusername
+                path: /voyager/ceph/users/yourusername/datasets/bert/books_wiki_en_corpus/tfrecord/
+                type: Directory
+            - name: pretrained
+              hostPath:
+                path: /voyager/ceph/users/yourusername/datasets/bert/pretrained/wwm_uncased_L-24_H-1024_A-16/
+                type: Directory
+            - name: output
+              hostPath:
+                path: /voyager/ceph/users/yourusername/results/bert_tf
                 type: Directory
           containers:
-            - image: vault.habana.ai/gaudi-docker/1.11.0/ubuntu22.04/habanalabs/tensorflow-installer-tf-cpu-2.12.1:latest
+            - image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu22.04/habanalabs/tensorflow-installer-tf-cpu-2.13.1
               name: bert-launcher
               volumeMounts:
                 - name: mydir
-                  mountPath: /home
+                  mountPath: /mydir
                 - name: scratch
                   mountPath: /scratch
-                - name: ceph
-                  mountPath: /ceph
-              env:
-                - name: input
-                  value: "/ceph/datasets/bert/books_wiki_en_corpus/tfrecord/seq_len_128/wikicorpus_en/training"
-                - name: eval
-                  value: "/ceph/datasets/bert/books_wiki_en_corpus/tfrecord/seq_len_128/wikicorpus_en/test"
-                - name: pretrain
-                  value: "/ceph/datasets/bert/pretrained/wwm_uncased_L-24_H-1024_A-16/bert_config.json"
+                - name: dataset
+                  mountPath: /dataset
+                - name: pretrained
+                  mountPath: /pretrained
+                - name: output
+                  mountPath: /output
+                  #env:
+                  #- name: input
+                  #value: "/ceph/datasets/bert/books_wiki_en_corpus/tfrecord/seq_len_128/wikicorpus_en/training"
+                  #- name: eval
+                  #value: "/ceph/datasets/bert/books_wiki_en_corpus/tfrecord/seq_len_128/wikicorpus_en/test"
+                  #- name: pretrain
+                  #value: "/ceph/datasets/bert/pretrained/wwm_uncased_L-24_H-1024_A-16/bert_config.json"
               command: ["/bin/bash", "-c"]
               args:
                 - >-
-                  declare -xr HOME='/scratch/tmp';
                   declare -xr NUM_NODES=1;
                   declare -xr NGPU_PER_NODE=8;
                   declare -xr N_CARDS=$((NUM_NODES*NGPU_PER_NODE));
 
-                  declare -xr RUN_PATH=/home/models/bert/8cards;
+                  declare -xr RUN_PATH=/mydir;
+                  declare -xr SYNAPSE_AI_VER=1.13.0;
                   declare -xr MODEL_PATH=/scratch/Model-References/TensorFlow/nlp/bert;
 
                   declare -xr PYTHONPATH=$PYTHONPATH:/scratch/Model-References:/scratch/Model-References/TensorFlow/nlp/bert/:/usr/lib/habanalabs;
                   declare -xr TF_BF16_CONVERSION=$MODEL_PATH/bf16_config/bert.json;
 
+                  sleep 15s;
 
                   mpirun  --npernode 1 \
                     --tag-output \
                     --allow-run-as-root \
                     --prefix $MPI_ROOT \
                     -x MODEL_PATH \
-                    -x HOME \
+                    -x SYNAPSE_AI_VER \
                     $RUN_PATH/setup.sh;
 
                   declare -xr CMD="python3 $MODEL_PATH/run_pretraining.py \
-                                 --input_files_dir=${input} \
+                                 --input_files_dir=/dataset/seq_len_128/wikicorpus_en/training  \
                                  --init_checkpoint= \
-                                 --eval_files_dir=${eval} \
-                                 --output_dir=/ceph/results/bert/phase_1 \
-                                 --bert_config_file=${pretrain} \
+                                 --eval_files_dir=/dataset/seq_len_128/wikicorpus_en/test \
+                                 --output_dir=/output/phase_1 \
+                                 --bert_config_file=/pretrained/bert_config.json \
                                  --do_train=True \
                                  --do_eval=False \
                                  --train_batch_size=64 \
                                  --eval_batch_size=8 \
                                  --max_seq_length=128 \
                                  --max_predictions_per_seq=20 \
-                                 --num_train_steps=100 \ #7038 \
+                                 --num_train_steps=20 \ #7038 \
                                  --num_accumulation_steps=128 \
                                  --num_warmup_steps=2000 \
-                                 --save_checkpoints_steps=100 \
+                                 --save_checkpoints_steps=5 \
                                  --learning_rate=0.00075 \
                                  --horovod \
                                  --noamp \
                                  --nouse_xla \
                                  --allreduce_post_accumulation=True \
-                                 --dllog_path=/ceph/results/bert/phase_1/bert_dllog.json \
+                                 --dllog_path=/output/phase_1/bert_dllog.json \
                                  --enable_scoped_allocator=False \
                                  --resume=False";
 
@@ -95,11 +108,12 @@ spec:
                     -rank-by core --report-bindings \
                     --tag-output \
                     --merge-stderr-to-stdout --prefix $MPI_ROOT \
-                    --output-filename /ceph/tmp/bert_phase1_log/ \
+                    --output-filename /output/bert_phase1_log/ \
                     -x PYTHONPATH \
-                    -x HOME \
                     -x TF_BF16_CONVERSION \
                     $CMD;
+
+                  sleep infinity;
 
     Worker:
       replicas: 1
@@ -108,16 +122,24 @@ spec:
           volumes:
             - name: mydir
               hostPath:
-                path: /home/yourusername
+                path: /home/yourusername/models/voyager/bert_tf/1.13/8cards
                 type: Directory
             - name: scratch
               emptyDir: {}
-            - name: ceph
+            - name: dataset
               hostPath:
-                path: /voyager/ceph/users/yourusername
+                path: /voyager/ceph/users/yourusername/datasets/bert/books_wiki_en_corpus/tfrecord/
+                type: Directory
+            - name: pretrained
+              hostPath:
+                path: /voyager/ceph/users/yourusername/datasets/bert/pretrained/wwm_uncased_L-24_H-1024_A-16/
+                type: Directory
+            - name: output
+              hostPath:
+                path: /voyager/ceph/users/yourusername/results/bert_tf
                 type: Directory
           containers:
-            - image: vault.habana.ai/gaudi-docker/1.11.0/ubuntu20.04/habanalabs/tensorflow-installer-tf-cpu-2.12.1:latest
+            - image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu22.04/habanalabs/tensorflow-installer-tf-cpu-2.13.1
               name: bert-worker
               imagePullPolicy: Always
               resources:
@@ -133,9 +155,13 @@ spec:
                   hugepages-2Mi: 95000Mi
               volumeMounts:
                 - name: mydir
-                  mountPath: /home
+                  mountPath: /mydir
                 - name: scratch
                   mountPath: /scratch
-                - name: ceph
-                  mountPath: /ceph
- 
+                - name: dataset
+                  mountPath: /dataset
+                - name: pretrained
+                  mountPath: /pretrained
+                - name: output
+                  mountPath: /output
+

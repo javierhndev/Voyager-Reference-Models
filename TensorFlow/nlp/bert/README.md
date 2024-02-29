@@ -1,7 +1,7 @@
 # BERT model using TensorFlow
 Here we provide the scripts and files to download the dataset and train a BERT model on Voyager. The model is mantained by Habana and you can find it in their [repository](https://github.com/HabanaAI/Model-References) in the `Natural language processing` section. Please check their repository for a deeper explanation of the BERT model.
 
-The model was verified on Voyager with SynapseAI version 1.11.
+The model was verified on Voyager with SynapseAI version 1.13.
 
 ### Main steps
 - Download the dataset:
@@ -92,7 +92,7 @@ Download the BERT Large pretrained model using our `pretrained.yaml` file. Chang
   ```bash
   kubectl create -f bert_phase1_1card.yaml
   ```   
-  Remeber to change the *dataset, pretrained parameters* and *output* folder to your own. The Single card run is too slow but can be used to test the model.
+  Remeber to change the *dataset, pretrained parameters* and *output* folders to your own. The Single card run is too slow but can be used to test the model.
 
 - **Phase 2** has not been checked because Phase 1 is too slow in a single card.
 
@@ -108,18 +108,21 @@ Download the BERT Large pretrained model using our `pretrained.yaml` file. Chang
 
 ### 8 Cards (single node)
 
-Most of the parameters passed to the model are the same as in a single card. But the *yaml* files have been modified to run in multiple HPUs. Here we launch an MPIJob to run the model in one node (with 8 cards). Note that we have modified the number of steps to run it in a few hours.
+Most of the parameters passed to the model are the same as in a single card. But the *yaml* files have been modified to run in multiple HPUs. Here we launch an MPIJob to run the model in one node (with 8 cards). Note that we have modified the number of steps to run it in a few minutes.
 
-- Pretraining **Phase 1** of BERT Large. The MPIJob can be launched using the `bert_phase1_8cards.yaml` located in the `8 cards` folder. You need to modify the `RUN_PATH` variable to point to the location of your `yaml` and `setup.sh` files. 
+- Pretraining **Phase 1** of BERT Large. The MPIJob can be launched using the `bert_phase1_8cards.yaml` located in the `8 cards` folder. You need to modify the `mydir` variable to point to the location of your `yaml` and `setup.sh` files. 
  
-  Remeber to change the *dataset, pretrained parameters* and *output* folder to your own.
+  Remeber to change the *dataset, pretrained parameters* and *output* folder to your own. In the launcher AND worker.
 
-  The number of steps have been reduced to `num_train_steps=100` to check the model. It takes more than an hour in eight HPUs.
+  The number of steps have been reduced to `num_train_steps=20` to check the model. It takes about ~20 minutes in eight HPUs.
 
 - Pretraining of **Phase 2**. You can use `bert_phase2_8cards.yaml` to launch the MPIJob to train the model. The `init_checkpoint` parameter takes as input the checkpoint from phase 1. Again, remeber to change the folders to your own.
 
-  We reduced the number of steps to 156 and it took ~5 hours to run.
+  We reduced the number of steps to 10 and it took ~15 minutes to run.
 
 - Fine-tuning with the **MRPC** dataset. Launch the MPIJob in 8 cards using the `bert_finet_MRPC_8cards.yaml` file. You should use the last checkpoint from Phase 2 fo the parameter `init_checkpoint` in the script.
 
-  Run takes a couple of minutes.     
+  Run takes a couple of minutes.    
+
+## Known issues
+ The model can run in multiple nodes but it fails during the checkpoint save. 
