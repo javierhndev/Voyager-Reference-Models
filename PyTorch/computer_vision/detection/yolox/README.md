@@ -3,9 +3,9 @@ Here we provide the yaml files and instructions to train YOLOX model on Voyager.
 
 ## Overview
 
-The model is supported by Intel-Habana. More details can be found in their [repository](https://github.com/HabanaAI/Model-References/tree/1.11.0/PyTorch/computer_vision/detection/yolox). This tutorial uses SynapseAI v1.11.
+The model is supported by Intel-Habana. More details can be found in their [repository](https://github.com/HabanaAI/Model-References/tree/1.13.0/PyTorch/computer_vision/detection/yolox). This tutorial uses SynapseAI v1.13.
 
-YOLOX is an anchor-free object detector that adopts the architecture of YOLO with DarkNet53 backbone. [Habana's repository](https://github.com/HabanaAI/Model-References/tree/1.11.0/PyTorch/computer_vision/detection/yolox) is an implementation of PyTorch version YOLOX, based on the source code from [https://github.com/Megvii-BaseDetection/YOLOX](https://github.com/MegEngine/YOLOX). More details can be found in the paper [YOLOX: Exceeding YOLO Series in 2021](https://arxiv.org/abs/2107.08430) by Zhen Ge, Songtao Liu, Feng Wang, Zeming Li, and Jian Sun.
+YOLOX is an anchor-free object detector that adopts the architecture of YOLO with DarkNet53 backbone. [Habana's repository](https://github.com/HabanaAI/Model-References/tree/1.13.0/PyTorch/computer_vision/detection/yolox) is an implementation of PyTorch version YOLOX, based on the source code from [https://github.com/Megvii-BaseDetection/YOLOX](https://github.com/MegEngine/YOLOX). More details can be found in the paper [YOLOX: Exceeding YOLO Series in 2021](https://arxiv.org/abs/2107.08430) by Zhen Ge, Songtao Liu, Feng Wang, Zeming Li, and Jian Sun.
 
 
 ## DATASET
