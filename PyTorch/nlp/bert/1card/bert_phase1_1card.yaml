@@ -7,21 +7,33 @@ spec:
   volumes:
     - name: scratch
       emptyDir: {}
-    - name: ceph
+    - name: dataset
       hostPath:
-        path: /voyager/ceph/users/yourusername
+        path: /voyager/ceph/users/yourusername/datasets/bert/pytorch
+        type: Directory
+    - name: output
+      hostPath:
+        path: /voyager/ceph/users/yourusername/results/bert_pytorch/1card
+        type: Directory
+    - name: dllog
+      hostPath:
+        path: /voyager/ceph/users/yourusername/tmp/log_directory
         type: Directory
   containers:
     - name: gaudi-container
-      image: vault.habana.ai/gaudi-docker/1.11.0/ubuntu22.04/habanalabs/pytorch-installer-2.0.1:latest
+      image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu22.04/habanalabs/pytorch-installer-2.1.0:latest
       volumeMounts:
         - mountPath: /scratch
           name: scratch
-        - mountPath: /ceph
-          name: ceph 
+        - mountPath: /dataset
+          name: dataset 
+        - mountPath: /output
+          name: output 
+        - mountPath: /dllog
+          name: dllog 
       resources:
         limits:
-          memory: 32Gi
+          memory: 32G
           cpu: 12
           habana.ai/gaudi: 1
           hugepages-2Mi: 95000Mi
@@ -30,33 +42,34 @@ spec:
           cpu: 12
           habana.ai/gaudi: 1
           hugepages-2Mi: 95000Mi
-      env:
-        - name: dataset
-          value: "/ceph/datasets/bert/pytorch"
-        - name: output
-          value: "/ceph/results/bert_pytorch/1card"
-        - name: dllog
-          value: "/ceph/tmp/log_directory"
+          #env:
+          #- name: dataset
+          #value: "/ceph/datasets/bert/pytorch"
+          #- name: output
+          #value: "/ceph/results/bert_pytorch/1card"
+          #- name: dllog
+          #value: "/ceph/tmp/log_directory"
       command: ["/bin/sh","-c"]
       args:
         - >- 
             hl-smi;
             export HOME=/scratch/tmp;
+            export PATH=/scratch/tmp/.local/bin:$PATH;
             mkdir -p /scratch/tmp/;
             cd /scratch;
-            git clone -b 1.11.0 https://github.com/HabanaAI/Model-References;
+            git clone -b 1.13.0 https://github.com/HabanaAI/Model-References;
             export PYTHONPATH=/scratch/Model-References:$PYTHONPATH;
             cd Model-References/PyTorch/nlp/bert;
             pip install -r requirements.txt;
-            pip install h5py==3.10.0 boto3==1.26.75 git+https://github.com/NVIDIA/dllogger.git@26a0f8f1958de2c0c460925ff6102a4d2486d6cc;
             python3 run_pretraining.py --do_train --bert_model=bert-large-uncased \
                     --autocast --config_file=./bert_config.json \
                     --use_habana --allreduce_post_accumulation --allreduce_post_accumulation_fp16 \
-                    --json-summary=${dllog}/dllogger.json --output_dir=${output} --use_fused_lamb \
-                    --input_dir=${dataset}/hdf5_lower_case_1_seq_len_128_max_pred_20_masked_lm_prob_0.15_random_seed_12345_dupe_factor_5/wikicorpus_en \
+                    --json-summary=/dllog/dllogger.json --output_dir=/output --use_fused_lamb \
+                    --input_dir=/dataset/hdf5_lower_case_1_seq_len_128_max_pred_20_masked_lm_prob_0.15_random_seed_12345_dupe_factor_5/wikicorpus_en \
                     --train_batch_size=8192 --max_seq_length=128 --max_predictions_per_seq=20 --max_steps=10 \
                     --warmup_proportion=0.2843 --num_steps_per_checkpoint=5 --learning_rate=0.006 --gradient_accumulation_steps=128 \
                     --enable_packed_data_mode False ;
 
 
-
+                    #pip install h5py==3.10.0 boto3==1.26.75 git+https://github.com/NVIDIA/dllogger.git@26a0f8f1958de2c0c460925ff6102a4d2486d6cc;
+ 

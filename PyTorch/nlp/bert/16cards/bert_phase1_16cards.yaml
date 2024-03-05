@@ -1,7 +1,7 @@
 apiVersion: kubeflow.org/v2beta1
 kind: MPIJob
 metadata:
-  name: yourusername-bert-32cards
+  name: yourusername-bert-16cards
   namespace: default
 spec:
   slotsPerWorker: 8
@@ -15,41 +15,53 @@ spec:
           volumes:
             - name: mydir
               hostPath:
-                path: /home/yourusername
+                path: /home/yourusername/models/voyager/bert_pytorch/1.13.0/multicard
                 type: Directory
             - name: scratch
               emptyDir: {}
-            - name: ceph
+            - name: dataset
               hostPath:
-                path: /voyager/ceph/users/yourusername
+                path: /voyager/ceph/users/yourusername/datasets/bert/pytorch
+                type: Directory
+            - name: output
+              hostPath:
+                path: /voyager/ceph/users/yourusername/results/bert_pytorch/16cards
+                type: Directory
+            - name: dllog
+              hostPath:
+                path: /voyager/ceph/users/yourusername/tmp/log_directory
                 type: Directory
           hostIPC: true
           containers:
-            - image: vault.habana.ai/gaudi-docker/1.11.0/ubuntu22.04/habanalabs/pytorch-installer-2.0.1:latest
+            - image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu22.04/habanalabs/pytorch-installer-2.1.0:latest
               name: bert-launcher
               volumeMounts:
                 - name: mydir
-                  mountPath: /home
+                  mountPath: /mydir
                 - name: scratch
                   mountPath: /scratch
-                - name: ceph
-                  mountPath: /ceph
-              env:
                 - name: dataset
-                  value: "/ceph/datasets/bert/pytorch"
+                  mountPath: /dataset
                 - name: output
-                  value: "/ceph/results/bert_pytorch/32cards"
+                  mountPath: /output
                 - name: dllog
-                  value: "/ceph/tmp/log_directory/32cards"
+                  mountPath: /dllog
+                  #env:
+                  #- name: dataset
+                  #value: "/ceph/datasets/bert/pytorch"
+                  #- name: output
+                  #value: "/ceph/results/bert_pytorch/8cards"
+                  #- name: dllog
+                  #value: "/ceph/tmp/log_directory"
               command: ["/bin/bash", "-c"]
               args:
                 - >-
-                  declare -xr HOME='/scratch/tmp';
-                  declare -xr NUM_NODES=4;
+                  declare -xr NUM_NODES=2;
                   declare -xr NGPU_PER_NODE=8;
                   declare -xr N_CARDS=$((NUM_NODES*NGPU_PER_NODE));
 
-                  declare -xr RUN_PATH=/home/models/bert_pytorch/32cards;
+                  declare -xr SYNAPSE_AI_VER=1.13.0;
+                  declare -xr RUN_PATH=/mydir;
                   declare -xr MODEL_PATH=/scratch/Model-References/PyTorch/nlp/bert;
 
                   declare -xr PYTHONPATH=$PYTHONPATH:/scratch/Model-References;
@@ -61,12 +73,14 @@ spec:
                   echo $MASTER_ADDR;
                   echo $MASTER_PORT;
 
+                  sleep 15s;
+
                   mpirun  --npernode 1 \
                     --tag-output \
                     --allow-run-as-root \
                     --prefix $MPI_ROOT \
                     -x MODEL_PATH \
-                    -x HOME \
+                    -x SYNAPSE_AI_VER \
                     $RUN_PATH/setup.sh;
 
                   declare -xr CMD="python3 $MODEL_PATH/run_pretraining.py \
@@ -78,21 +92,18 @@ spec:
                                    --use_habana \
                                    --allreduce_post_accumulation \
                                    --allreduce_post_accumulation_fp16 \
-                                   --json-summary=${dllog}/dllogger.json \
-                                   --output_dir=${output} \
+                                   --json-summary=/dllog/dllogger.json \
+                                   --output_dir=/output \
                                    --use_fused_lamb \
-                                   --input_dir=${dataset}/hdf5_lower_case_1_seq_len_512_max_pred_80_masked_lm_prob_0.15_random_seed_12345_dupe_factor_5/wikicorpus_en \
+                                   --input_dir=/dataset//hdf5_lower_case_1_seq_len_128_max_pred_20_masked_lm_prob_0.15_random_seed_12345_dupe_factor_5/wikicorpus_en \
                                    --train_batch_size=8192 \
-                                   --max_seq_length=512 \
-                                   --max_predictions_per_seq=80 \
-                                   --warmup_proportion=0.128 \
-                                   --max_steps=10 \
-                                   --num_steps_per_checkpoint=5 \
-                                   --learning_rate=0.004 \
-                                   --gradient_accumulation_steps=512 \
-                                   --resume_from_checkpoint \
-                                   --phase1_end_step=10 \
-                                   --phase2 \
+                                   --max_seq_length=128 \
+                                   --max_predictions_per_seq=20 \
+                                   --warmup_proportion=0.2843 \
+                                   --max_steps=30 \
+                                   --num_steps_per_checkpoint=15 \
+                                   --learning_rate=0.006 \
+                                   --gradient_accumulation_steps=128 \
                                    --enable_packed_data_mode False" ;
                   
                   
@@ -107,27 +118,34 @@ spec:
                     -x MASTER_ADDR=$MASTER_ADDR \
                     -x MASTER_PORT=$MASTER_PORT \
                     -x PYTHONPATH \
-                    -x HOME \
                     $CMD;
 
     Worker:
-      replicas: 4
+      replicas: 2
       template:
         spec:
           volumes:
             - name: mydir
               hostPath:
-                path: /home/yourusername
+                path: /home/yourusername/models/voyager/bert_pytorch/1.13.0/multicard
                 type: Directory
             - name: scratch
               emptyDir: {}
-            - name: ceph
+            - name: dataset
               hostPath:
-                path: /voyager/ceph/users/yourusername
+                path: /voyager/ceph/users/yourusername/datasets/bert/pytorch
+                type: Directory
+            - name: output
+              hostPath:
+                path: /voyager/ceph/users/yourusername/results/bert_pytorch/16cards
+                type: Directory
+            - name: dllog
+              hostPath:
+                path: /voyager/ceph/users/yourusername/tmp/log_directory
                 type: Directory
           hostIPC: true
           containers:
-            - image: vault.habana.ai/gaudi-docker/1.11.0/ubuntu22.04/habanalabs/pytorch-installer-2.0.1:latest
+            - image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu22.04/habanalabs/pytorch-installer-2.1.0:latest
               name: bert-worker
               imagePullPolicy: Always
               resources:
@@ -143,9 +161,13 @@ spec:
                   hugepages-2Mi: 95000Mi
               volumeMounts:
                 - name: mydir
-                  mountPath: /home
+                  mountPath: /mydir
                 - name: scratch
                   mountPath: /scratch
-                - name: ceph
-                  mountPath: /ceph
- 
+                - name: dataset
+                  mountPath: /dataset
+                - name: output
+                  mountPath: /output
+                - name: dllog
+                  mountPath: /dllog
+
