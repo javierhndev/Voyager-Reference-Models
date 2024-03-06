@@ -19,6 +19,7 @@ The list of models is being improved. Your feedback is greatly appreciated. Feel
 | [ResNet50 (Pytorch Lightning)](PyTorch/computer_vision/classification/lightning/resnet) | Pytorch Lightning |            |  1.13    |
 | [MobileNetV2](PyTorch/computer_vision/classification/torchvision)                       | Pytorch           |  Yes       |  1.13    |
 | [GoogLeNet](PyTorch/computer_vision/classification/torchvision)                         | Pytorch           |  Yes       |  1.13    |
+| [UNet2D,UNet3D](PyTorch/computer_vision/segmentation/unet)                              | Pytorch Lightning |            |  1.13    |
 | [YOLOX](PyTorch/computer_vision/detection/yolox)                                        | Pytorch           |  Yes       |  1.13    |
 | [SSD](PyTorch/computer_vision/detection/ssd)                                            | Pytorch           |            |  1.13    |
 | [Vision Transformer](PyTorch/computer_vision/classification/ViT)                        | Pytorch           |  Yes       |  1.13    |
@@ -28,13 +29,13 @@ The list of models is being improved. Your feedback is greatly appreciated. Feel
 
 
 ## Natural Language processing
-| Models                                                                        | Framework  | Multi-node  | Verified |
-| ----------------------------------------------------------------------------- | ---------- | ----------- | -------- |
-| [BERT](PyTorch/nlp/bert)                                                      | Pytorch    |  Yes        |   1.13   |
-| [BART (fine-tuning,simpletransformers)](PyTorch/nlp/BART)                     | Pytorch    |  Yes        |   1.13   |
-| [Hugginface BLOOM (inference)](PyTorch/nlp/bloom)                             | Pytorch    |             |   1.13   |
-| [LLaMA (Megatron-DeepSpeed](PyTorch/nlp/DeepSpeedExamples/Megatron-DeepSpeed) | Pytorch    |  Yes        |   1.13   |
-| [BERT](TensorFlow/nlp/bert)                                                   | TensorFlow |             |   1.13   |
+| Models                                                                         | Framework  | Multi-node  | Verified |
+| ------------------------------------------------------------------------------ | ---------- | ----------- | -------- |
+| [BERT](PyTorch/nlp/bert)                                                       | Pytorch    |  Yes        |   1.13   |
+| [BART (fine-tuning,simpletransformers)](PyTorch/nlp/BART)                      | Pytorch    |  Yes        |   1.13   |
+| [Hugginface BLOOM (inference)](PyTorch/nlp/bloom)                              | Pytorch    |             |   1.13   |
+| [LLaMA (Megatron-DeepSpeed)](PyTorch/nlp/DeepSpeedExamples/Megatron-DeepSpeed) | Pytorch    |  Yes        |   1.13   |
+| [BERT](TensorFlow/nlp/bert)                                                    | TensorFlow |             |   1.13   |
 
 ## Generative models
 | Models                                                         | Framework  | Multi-node | Verified |

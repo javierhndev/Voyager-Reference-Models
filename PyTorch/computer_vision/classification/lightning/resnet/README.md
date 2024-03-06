@@ -51,7 +51,7 @@ To run on multiple cards we launch an MPI job with three files: `resnet_light_8c
 - `dataset`: The location of the ILSDVRC2012 dataset.
 
 
-Neither `setup.sh` or `run_resnet.sh` need to be modified. Once the MPI job is launched, the `run_vit.sh` will execute the following:
+Neither `setup.sh` or `run_resnet.sh` need to be modified. Once the MPI job is launched, the `run_resnet.sh` will execute the following:
 ```bash
 python3 $MODEL_PATH/resnet50_PTL.py \
              --batch_size 256 \

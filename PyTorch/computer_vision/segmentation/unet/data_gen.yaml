@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: datadown
+spec:
+  restartPolicy: Never
+  volumes:
+    - name: scratch
+      emptyDir: {}
+    - name: ceph
+      hostPath:
+        path: /voyager/ceph/users/yourusername
+        type: Directory
+  containers:
+    - name: gaudi-container
+      image: vault.habana.ai/gaudi-docker/1.11.0/ubuntu22.04/habanalabs/pytorch-installer-2.0.1:latest
+      volumeMounts:
+        - mountPath: /scratch
+          name: scratch
+        - mountPath: /ceph
+          name: ceph 
+      resources:
+         limits:
+           memory: 32G
+           cpu: 6
+           habana.ai/gaudi: 1
+           hugepages-2Mi: 95000Mi
+         requests:
+           memory: 32G
+           cpu: 6
+           habana.ai/gaudi: 1
+           hugepages-2Mi: 95000Mi
+      env:
+       - name: dataset
+         value: "/ceph/datasets/BraTS"
+      command: ["/bin/sh","-c"]
+      args:
+        - hl-smi;
+          export HOME=/scratch/tmp;
+          mkdir -p /scratch/tmp;
+          cd /scratch;
+          git clone -b 1.11.0 https://github.com/HabanaAI/Model-References;
+          export PYTHONPATH=/scratch/Model-References:$PYTHONPATH;
+          cd Model-References/PyTorch/computer_vision/segmentation/Unet;
+          pip install -r ./requirements_u22.txt;
+          python3 preprocess.py --task 01 --dim 2 --data ${dataset} --results ${dataset}/pytorch/unet/;
+          python3 preprocess.py --task 01 --dim 2 --exec_mode val --data ${dataset} --results ${dataset}/pytorch/unet/;
+          python3 preprocess.py --task 01 --dim 2 --exec_mode test --data ${dataset} --results ${dataset}/pytorch/unet/;
+
+          python3 preprocess.py --task 01 --dim 3 --data ${dataset} --results ${dataset}/pytorch/unet/;
+          python3 preprocess.py --task 01 --dim 3 --exec_mode val --data ${dataset} --results ${dataset}/pytorch/unet/;
+          python3 preprocess.py --task 01 --dim 3 --exec_mode test --data ${dataset} --results ${dataset}/pytorch/unet/;
+
+                      
+          #python3 download.py --task 01 --results ${dataset};
+
