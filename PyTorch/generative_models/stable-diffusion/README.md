@@ -1,5 +1,7 @@
 # Stable Diffusion for PyTorch
 
+# MODEL NOT SUPPORTED UNTIL FURTHER NOTICE
+
 ## Overview
 Here we provide the instructions to run the stable diffusion model on Voyager. This model can be found in [Habana's Model-Referenes repository](https://github.com/HabanaAI/Model-References/tree/master/PyTorch/generative_models/stable-diffusion) and it is based on latent text-to-image diffusion model.
 

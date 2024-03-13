@@ -1,0 +1,113 @@
+apiVersion: kubeflow.org/v2beta1
+kind: MPIJob
+metadata:
+  name: yourusername-stable-diffusion-8cards
+  namespace: default
+spec:
+  slotsPerWorker: 8
+  runPolicy:
+    cleanPodPolicy: Running
+  mpiReplicaSpecs:
+    Launcher:
+      replicas: 1
+      template:
+        spec:
+          volumes:
+            - name: mydir
+              hostPath:
+                path: /home/yourusername/models/voyager/stable_diff2/1.13
+                type: Directory
+            - name: scratch
+              emptyDir: {}
+            - name: pretrained
+              hostPath:
+                path: /voyager/ceph/users/yourusername/datasets/stable_pretrained
+                type: Directory
+            - name: output
+              hostPath:
+                path: /voyager/ceph/users/yourusername/results/stable_diff2
+                type: Directory
+          hostIPC: true
+          containers:
+            - image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu22.04/habanalabs/pytorch-installer-2.1.0:latest
+              name: sd-launcher
+              volumeMounts:
+                - name: mydir
+                  mountPath: /mydir
+                - name: scratch
+                  mountPath: /scratch
+                - name: pretrained
+                  mountPath: /pretrained
+                - name: output
+                  mountPath: /output
+                  #env:
+                  #- name: dataset
+                  #value: "/ceph/datasets/bloom/checkpoints"
+              command: ["/bin/bash", "-c"]
+              args:
+                - >-
+                  declare -xr NUM_NODES=1;
+                  declare -xr SYNAPSE_AI_VER=1.13.0;
+
+                  declare -xr RUN_PATH=/mydir;
+                  declare -xr MODEL_ROOT=/scratch/Model-References;
+                  declare -xr MODEL_PATH=$MODEL_ROOT/PyTorch/generative_models/stable-diffusion-v-2-1;
+                  sleep 15s;
+
+                  mpirun  --npernode 1 \
+                    --tag-output \
+                    --allow-run-as-root \
+                    --prefix $MPI_ROOT \
+                    -x MODEL_PATH \
+                    -x SYNAPSE_AI_VER \
+                    $RUN_PATH/setup.sh;
+
+                  $RUN_PATH/run_sd.sh;
+                  chmod -R o+w /output/*;
+
+
+    Worker:
+      replicas: 1
+      template:
+        spec:
+          volumes:
+            - name: mydir
+              hostPath:
+                path: /home/yourusername/models/voyager/stable_diff2/1.13
+                type: Directory
+            - name: scratch
+              emptyDir: {}
+            - name: pretrained
+              hostPath:
+                path: /voyager/ceph/users/yourusername/datasets/stable_pretrained
+                type: Directory
+            - name: output
+              hostPath:
+                path: /voyager/ceph/users/yourusername/results/stable_diff2
+                type: Directory
+          hostIPC: true
+          containers:
+            - image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu22.04/habanalabs/pytorch-installer-2.1.0:latest
+              name: sd-worker
+              imagePullPolicy: Always
+              resources:
+                limits:
+                  habana.ai/gaudi: 8
+                  cpu: 95
+                  memory: 409Gi
+                  hugepages-2Mi: 95000Mi
+                requests:
+                  habana.ai/gaudi: 8
+                  cpu: 95
+                  memory: 409Gi
+                  hugepages-2Mi: 95000Mi
+              volumeMounts:
+                - name: mydir
+                  mountPath: /mydir
+                - name: scratch
+                  mountPath: /scratch
+                - name: pretrained
+                  mountPath: /pretrained
+                - name: output
+                  mountPath: /output
+ 

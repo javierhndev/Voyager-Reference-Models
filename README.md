@@ -38,6 +38,7 @@ The list of models is being improved. Your feedback is greatly appreciated. Feel
 | [BERT](TensorFlow/nlp/bert)                                                    | TensorFlow |             |   1.13   |
 
 ## Generative models
-| Models                                                         | Framework  | Multi-node | Verified |
-| -------------------------------------------------------------- | ---------- | ---------- | -------- |
-| [Stable-Diffusion](PyTorch/generative_models/stable-diffusion) | Pytorch    |            |   1.11   |
+| Models                                                                                           | Framework  | Multi-node | Verified |
+| ------------------------------------------------------------------------------------------------ | ---------- | ---------- | -------- |
+| [(Not supported now) Stable-Diffusion](PyTorch/generative_models/stable-diffusion)               | Pytorch    |            |   1.11   | 
+| [Stable-Diffusion 2.1 (Inference, Huggingface)](PyTorch/generative_models/stable-diffusion-v2-1) | Pytorch    |            |   1.13   |
