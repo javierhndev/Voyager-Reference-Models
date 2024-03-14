@@ -10,7 +10,8 @@ The list of models is being improved. Your feedback is greatly appreciated. Feel
 ## Simple examples
 - ['Hello World!'](helloworld): simplest example to run on Voyager.
 - [Fashion-MNIST](TensorFlow/examples/Fashion-MNIST) model. It shows how to run a python script with TensorFlow.
-- [MPIJob](TensorFlow/examples/MPIJob) Learn how to run a MNIST model in multiple HPUs. 
+- [MPIJob TF](TensorFlow/examples/MPIJob) Learn how to run a MNIST Tensorflow model in multiple HPUs. 
+- [MPIJob PT](PyTorch/examples/MPIJob/) Learn how to run a MNIST Pytorch model in multiple HPUs. 
 
 ## Computer Vision
 | Models                                                                                  | Framework         | Multi-node | Verified |

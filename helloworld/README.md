@@ -1,11 +1,36 @@
 # Hello World! Example
 Here we are going to show how to run a simple 'Hello World!' on Voyager. In addition, Kubernetes commands and pod parameters are discussed.
 
-# Running the pod
+# Running a pod
 
 Voyager uses Kubernetes to run your applications. There are many tutorials on Kubernetes elsewhere so here we will show the basic commands.
 
-You can find in this folder a file called `helloworld.yaml` To submit the job to the Kubernetes cluster, you need to type
+You can find in this folder a file called `helloworld.yaml` which looks like this:
+```bash
+apiVersion: v1
+kind: Pod
+metadata:
+  name: helloworld
+spec:
+   restartPolicy: Never
+   containers:
+     - name: gaudi-container
+       image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu22.04/habanalabs/pytorch-installer-2.1.0:latest
+       resources:
+         limits:
+           memory: 1G
+           cpu: 1
+           habana.ai/gaudi: 1
+         requests:
+           memory: 1G
+           cpu: 1
+           habana.ai/gaudi: 1
+       command: ["/bin/sh","-c"]
+       args: ["echo Hello World!"]
+```
+The yaml file creates a pod and loads a container with Habana's image and a single HPU (`habana.ai/gaudi: 1`).
+
+A pod is the simplest object that runs in Kubernetes. To run it, use the command
 
 ```bash
 kubectl create -f helloworld.yaml

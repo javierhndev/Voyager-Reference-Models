@@ -1,29 +1,28 @@
 apiVersion: v1
 kind: Pod
 metadata:
-        name: testtf
+  name: testtf
 spec:
-        restartPolicy: Never
-        volumes:
-                - name: home
-                  hostPath:
-                          path: /home/yourusername
-                          type: Directory
-        containers:
-                - name: gaudi-container
-                  #image: vault.habana.ai/gaudi-docker/1.8.0/ubuntu22.04/habanalabs/tensorflow-installer-tf-cpu-2.8.4:1.8.0-690-20230214
-                  image: vault.habana.ai/gaudi-docker/1.11.0/ubuntu22.04/habanalabs/tensorflow-installer-tf-cpu-2.12.1:latest
-                  volumeMounts:
-                          - mountPath: /home/yourusername
-                            name: home
-                  resources:
-                         limits:
-                                memory: 32G
-                                cpu: 1
-                                habana.ai/gaudi: 1
-                         requests:
-                                memory: 32G
-                                cpu: 1
-                                habana.ai/gaudi: 1
-                  command: ["/bin/sh","-c"]
-                  args: ["cd /home/yourusername/test_tf && python3 ./example_tf_mnist.py"]
+  restartPolicy: Never
+  volumes:
+   - name: workdir
+     hostPath:
+        path: /home/yourusername/test_tf
+        type: Directory
+  containers:
+    - name: gaudi-container
+      image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu22.04/habanalabs/tensorflow-installer-tf-cpu-2.13.1
+      volumeMounts:
+         - mountPath: /workdir
+           name: workdir
+      resources:
+        limits:
+          memory: 32G
+          cpu: 1
+          habana.ai/gaudi: 1
+        requests:
+          memory: 32G
+          cpu: 1
+          habana.ai/gaudi: 1
+      command: ["/bin/sh","-c"]
+      args: ["python3 /workdir/example_tf_mnist.py"]

@@ -1,7 +1,7 @@
 apiVersion: kubeflow.org/v2beta1
 kind: MPIJob
 metadata:
-  name: yourusername-test-8cards
+  name: yourusername-test-16cards
   namespace: default
 spec:
   slotsPerWorker: 8
@@ -30,7 +30,7 @@ spec:
               command: ["/bin/bash", "-c"]
               args:
                 - >-
-                  declare -xr NUM_NODES=1;
+                  declare -xr NUM_NODES=2;
                   declare -xr NGPU_PER_NODE=8;
                   declare -xr N_CARDS=$((NUM_NODES*NGPU_PER_NODE));
 
@@ -61,7 +61,7 @@ spec:
                     $CMD;
 
     Worker:
-      replicas: 1
+      replicas: 2
       template:
         spec:
           volumes:

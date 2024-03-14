@@ -15,12 +15,13 @@ spec:
           volumes:
             - name: mydir
               hostPath:
-                path: /home/yourusername/test_mpi/tensorflow
+                path: /home/yourusername/test_mpi/pytorch
                 type: Directory
             - name: scratch
               emptyDir: {}
+          hostIPC: true
           containers:
-            - image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu22.04/habanalabs/tensorflow-installer-tf-cpu-2.13.1
+            - image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu22.04/habanalabs/pytorch-installer-2.1.0:latest
               name: test-launcher
               volumeMounts:
                 - name: mydir
@@ -34,10 +35,19 @@ spec:
                   declare -xr NGPU_PER_NODE=8;
                   declare -xr N_CARDS=$((NUM_NODES*NGPU_PER_NODE));
 
-                  declare -xr RUN_PATH=/mydir;
                   declare -xr SYNAPSE_AI_VER=1.13.0;
-                  declare -xr MODEL_PATH=/scratch/Model-References/TensorFlow/examples/hello_world;
+                  declare -xr RUN_PATH=/mydir;
+
+                  declare -xr MODEL_PATH=/scratch/Model-References/PyTorch/examples/computer_vision/hello_world   ;
                   declare -xr PYTHONPATH=$PYTHONPATH:/scratch/Model-References;
+
+                  HOSTSFILE=${HOSTSFILE:-$OMPI_MCA_orte_default_hostfile};
+                  declare -xr MASTER_ADDR=$(head -n 1 $HOSTSFILE | sed -n s/[[:space:]]slots.*//p);
+                  declare -xr MASTER_PORT=${MASTER_PORT:-15566};
+
+                  echo $MASTER_ADDR;
+                  echo $MASTER_PORT;
+
                   sleep 15s;
 
                   mpirun  --npernode 1 \
@@ -48,7 +58,13 @@ spec:
                     -x SYNAPSE_AI_VER \
                     $RUN_PATH/setup.sh;
 
-                  declare -xr CMD="python3 $MODEL_PATH/example_hvd.py";
+                  declare -xr CMD="python3 $MODEL_PATH/mnist.py \
+                                   --batch-size=64 \
+                                   --epochs=1 \
+                                   --lr=1.0 \
+                                   --gamma=0.7 \
+                                   --hpu
+                                   --autocast";
 
                   mpirun -np ${N_CARDS} \
                     --allow-run-as-root \
@@ -57,8 +73,12 @@ spec:
                     -rank-by core --report-bindings \
                     --tag-output \
                     --merge-stderr-to-stdout --prefix $MPI_ROOT \
+                    -x MASTER_ADDR=$MASTER_ADDR \
+                    -x MASTER_PORT=$MASTER_PORT \
                     -x PYTHONPATH \
+                    -x PT_HPU_LAZY_MODE=1 \
                     $CMD;
+
 
     Worker:
       replicas: 1
@@ -67,12 +87,13 @@ spec:
           volumes:
             - name: mydir
               hostPath:
-                path: /home/yourusername/test_mpi/tensorflow
+                path: /home/yourusername/test_mpi/pytorch
                 type: Directory
             - name: scratch
               emptyDir: {}
+          hostIPC: true
           containers:
-            - image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu22.04/habanalabs/tensorflow-installer-tf-cpu-2.13.1
+            - image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu22.04/habanalabs/pytorch-installer-2.1.0:latest
               name: test-worker
               imagePullPolicy: Always
               resources:
