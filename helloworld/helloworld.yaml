@@ -6,7 +6,7 @@ spec:
    restartPolicy: Never
    containers:
      - name: gaudi-container
-       image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu22.04/habanalabs/pytorch-installer-2.1.0:latest
+       image: vault.habana.ai/gaudi-docker/1.15.1/ubuntu22.04/habanalabs/pytorch-installer-2.2.0:latest
        resources:
          limits:
            memory: 1G

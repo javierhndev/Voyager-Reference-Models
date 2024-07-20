@@ -1,5 +1,7 @@
 #!/bin/sh
 
+hl-smi;
+
 cd /scratch;
 
 #mkdir -p /scratch/tmp;
