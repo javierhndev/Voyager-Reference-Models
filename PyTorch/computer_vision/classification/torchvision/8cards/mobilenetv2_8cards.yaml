@@ -2,7 +2,7 @@ apiVersion: kubeflow.org/v2beta1
 kind: MPIJob
 metadata:
   name: yourusername-mobilenetv2-8cards
-  namespace: default
+  namespace: yourusername-restricted
 spec:
   slotsPerWorker: 8
   runPolicy:
@@ -12,6 +12,9 @@ spec:
       replicas: 1
       template:
         spec:
+          nodeSelector:
+            brightcomputing.com/node-category: 'compute'
+          serviceAccountName: yourusername
           volumes:
             - name: mydir
               hostPath:
@@ -19,26 +22,39 @@ spec:
                 type: Directory
             - name: scratch
               emptyDir: {}
-            - name: ceph
+            - name: dataset
               hostPath:
-                path: /voyager/ceph/users/yourusername
+                path: /voyager/ceph/users/yourusername/datasets/imagenet/ILSVRC2012
+                type: Directory
+            - name: output
+              hostPath:
+                path: /voyager/ceph/users/yourusername/results/resnet/mobilenetv2/8cards
                 type: Directory
           hostIPC: true
           containers:
-            - image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu22.04/habanalabs/pytorch-installer-2.1.0:latest 
+            - image: vault.habana.ai/gaudi-docker/1.15.1/ubuntu22.04/habanalabs/pytorch-installer-2.2.0:latest
               name: mobilenetv2-launcher
+              resources:
+                requests:
+                  cpu: 2
+                  memory: 4Gi
+                limits:
+                  cpu: 4
+                  memory: 8Gi
               volumeMounts:
                 - name: mydir
                   mountPath: /home
                 - name: scratch
                   mountPath: /scratch
-                - name: ceph
-                  mountPath: /ceph
-              env:
                 - name: dataset
-                  value: "/ceph/datasets/imagenet/ILSVRC2012"
+                  mountPath: /dataset
                 - name: output
-                  value: "/ceph/results/resnet/mobilenetv2/8cards"
+                  mountPath: /output
+                  #env:
+                  #- name: dataset
+                  #value: "/ceph/datasets/imagenet/ILSVRC2012"
+                  #- name: output
+                  #value: "/ceph/results/resnet/mobilenetv2/8cards"
               command: ["/bin/bash", "-c"]
               args:
                 - >-
@@ -46,9 +62,9 @@ spec:
                   declare -xr NGPU_PER_NODE=8;
                   declare -xr N_CARDS=$((NUM_NODES*NGPU_PER_NODE));
 
-                  declare -xr SYNAPSE_AI_VER=1.13.0;
+                  declare -xr SYNAPSE_AI_VER=1.15.1;
 
-                  declare -xr RUN_PATH=/home/models/voyager/resnet/1.13.0/8cards;
+                  declare -xr RUN_PATH=/home/models/voyager/resnet/1.15.1/8cards;
                   declare -xr MODEL_PATH=/scratch/Model-References/PyTorch/computer_vision/classification/torchvision;
 
                   declare -xr PYTHONPATH=$PYTHONPATH:/scratch/Model-References;
@@ -60,6 +76,8 @@ spec:
                   echo $MASTER_ADDR;
                   echo $MASTER_PORT;
 
+                  sleep 20s;
+
                   mpirun  --npernode 1 \
                     --tag-output \
                     --allow-run-as-root \
@@ -69,14 +87,14 @@ spec:
                     $RUN_PATH/setup.sh;
 
                   declare -xr CMD="python3 $MODEL_PATH/train.py \
-                                   --data-path=${dataset} \
+                                   --data-path=/dataset \
                                    --model=mobilenet_v2 \
                                    --device=hpu \
                                    --batch-size=256 \
                                    --epochs=1 \
                                    --workers=8 \
                                    --print-freq=20 \
-                                   --output-dir=${output} \
+                                   --output-dir=/output \
                                    --seed=123 \
                                    --autocast  \
                                    --lr=0.36 \
@@ -106,6 +124,7 @@ spec:
       replicas: 1
       template:
         spec:
+          serviceAccountName: yourusername
           volumes:
             - name: mydir
               hostPath:
@@ -113,13 +132,17 @@ spec:
                 type: Directory
             - name: scratch
               emptyDir: {}
-            - name: ceph
+            - name: dataset
               hostPath:
-                path: /voyager/ceph/users/yourusername
+                path: /voyager/ceph/users/yourusername/datasets/imagenet/ILSVRC2012
+                type: Directory
+            - name: output
+              hostPath:
+                path: /voyager/ceph/users/yourusername/results/resnet/mobilenetv2/8cards
                 type: Directory
           hostIPC: true
           containers:
-            - image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu22.04/habanalabs/pytorch-installer-2.1.0:latest 
+            - image: vault.habana.ai/gaudi-docker/1.15.1/ubuntu22.04/habanalabs/pytorch-installer-2.2.0:latest
               name: mobilenetv2-worker
               imagePullPolicy: Always
               resources:
@@ -138,6 +161,8 @@ spec:
                   mountPath: /home
                 - name: scratch
                   mountPath: /scratch
-                - name: ceph
-                  mountPath: /ceph
+                - name: dataset
+                  mountPath: /dataset
+                - name: output
+                  mountPath: /output
  

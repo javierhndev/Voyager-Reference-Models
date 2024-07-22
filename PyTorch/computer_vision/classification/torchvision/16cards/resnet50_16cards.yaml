@@ -2,7 +2,7 @@ apiVersion: kubeflow.org/v2beta1
 kind: MPIJob
 metadata:
   name: yourusername-resnet-16cards
-  namespace: default
+  namespace: yourusername-restricted
 spec:
   slotsPerWorker: 8
   runPolicy:
@@ -12,6 +12,9 @@ spec:
       replicas: 1
       template:
         spec:
+          nodeSelector:
+            brightcomputing.com/node-category: 'compute'
+          serviceAccountName: yourusername
           volumes:
             - name: mydir
               hostPath:
@@ -19,26 +22,39 @@ spec:
                 type: Directory
             - name: scratch
               emptyDir: {}
-            - name: ceph
+            - name: dataset
               hostPath:
-                path: /voyager/ceph/users/yourusername
+                path: /voyager/ceph/users/yourusername/datasets/imagenet/ILSVRC2012
+                type: Directory
+            - name: output
+              hostPath:
+                path: /voyager/ceph/users/yourusername/results/resnet/resnet50/8cards
                 type: Directory
           hostIPC: true
           containers:
-            - image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu22.04/habanalabs/pytorch-installer-2.1.0:latest 
+            - image: vault.habana.ai/gaudi-docker/1.15.1/ubuntu22.04/habanalabs/pytorch-installer-2.2.0:latest
               name: resnet-launcher
+              resources:
+                requests:
+                  cpu: 2
+                  memory: 4Gi
+                limits:
+                  cpu: 4
+                  memory: 8Gi
               volumeMounts:
                 - name: mydir
                   mountPath: /home
                 - name: scratch
                   mountPath: /scratch
-                - name: ceph
-                  mountPath: /ceph
-              env:
                 - name: dataset
-                  value: "/ceph/datasets/imagenet/ILSVRC2012"
+                  mountPath: /dataset
                 - name: output
-                  value: "/ceph/results/resnet/resnet50/16cards"
+                  mountPath: /output
+                  #env:
+                  #- name: dataset
+                  #value: "/ceph/datasets/imagenet/ILSVRC2012"
+                  #- name: output
+                  #value: "/ceph/results/resnet/resnet50/8cards"
               command: ["/bin/bash", "-c"]
               args:
                 - >-
@@ -46,9 +62,9 @@ spec:
                   declare -xr NGPU_PER_NODE=8;
                   declare -xr N_CARDS=$((NUM_NODES*NGPU_PER_NODE));
 
-                  declare -xr SYNAPSE_AI_VER=1.13.0;
+                  declare -xr SYNAPSE_AI_VER=1.15.1;
 
-                  declare -xr RUN_PATH=/home/models/voyager/resnet/1.13.0/16cards;
+                  declare -xr RUN_PATH=/home/models/voyager/resnet/1.15.1/16cards;
                   declare -xr MODEL_PATH=/scratch/Model-References/PyTorch/computer_vision/classification/torchvision;
 
                   declare -xr PYTHONPATH=$PYTHONPATH:/scratch/Model-References;
@@ -60,7 +76,7 @@ spec:
                   echo $MASTER_ADDR;
                   echo $MASTER_PORT;
 
-                  sleep 20s;
+                  sleep 15s;
 
                   mpirun  --npernode 1 \
                     --tag-output \
@@ -77,14 +93,14 @@ spec:
                                    --print-freq 20 \
                                    --dl-time-exclude False \
                                    --deterministic \
-                                   --data-path ${dataset} \
-                                   --output-dir ${output} \
+                                   --data-path /dataset \
+                                   --output-dir /output \
                                    --save-checkpoint \
                                    --epochs 1 \
                                    --autocast  \
                                    --lr 0.1 \
                                    --custom-lr-values 0.275 0.45 0.625 0.8 0.08 0.008 0.0008 \
-                                   --custom-lr-milestones 1 2 3 4 30 60 80 ";
+                                   --custom-lr-milestones 1 2 3 4 30 60 80";
 
 
 
@@ -104,6 +120,7 @@ spec:
       replicas: 2
       template:
         spec:
+          serviceAccountName: yourusername
           volumes:
             - name: mydir
               hostPath:
@@ -111,13 +128,17 @@ spec:
                 type: Directory
             - name: scratch
               emptyDir: {}
-            - name: ceph
+            - name: dataset
               hostPath:
-                path: /voyager/ceph/users/yourusername
+                path: /voyager/ceph/users/yourusername/datasets/imagenet/ILSVRC2012
+                type: Directory
+            - name: output
+              hostPath:
+                path: /voyager/ceph/users/yourusername/results/resnet/resnet50/8cards
                 type: Directory
           hostIPC: true
           containers:
-            - image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu22.04/habanalabs/pytorch-installer-2.1.0:latest 
+            - image: vault.habana.ai/gaudi-docker/1.15.1/ubuntu22.04/habanalabs/pytorch-installer-2.2.0:latest
               name: resnet50-worker
               imagePullPolicy: Always
               resources:
@@ -136,6 +157,8 @@ spec:
                   mountPath: /home
                 - name: scratch
                   mountPath: /scratch
-                - name: ceph
-                  mountPath: /ceph
+                - name: dataset
+                  mountPath: /dataset
+                - name: output
+                  mountPath: /output
  

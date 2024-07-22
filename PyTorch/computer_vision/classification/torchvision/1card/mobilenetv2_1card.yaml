@@ -13,7 +13,7 @@ spec:
         type: Directory
   containers:
     - name: gaudi-container
-      image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu22.04/habanalabs/pytorch-installer-2.1.0:latest
+      image: vault.habana.ai/gaudi-docker/1.15.1/ubuntu22.04/habanalabs/pytorch-installer-2.2.0:latest
       volumeMounts:
         - mountPath: /scratch
           name: scratch
@@ -42,7 +42,7 @@ spec:
           export HOME=/scratch/tmp;
           cd /scratch;
           mkdir -p tmp;
-          git clone -b 1.13.0 https://github.com/HabanaAI/Model-References;
+          git clone -b 1.15.1 https://github.com/HabanaAI/Model-References;
           cd Model-References/PyTorch/computer_vision/classification/torchvision;
           export PYTHONPATH=/scratch/Model-References:$PYTHONPATH;
           pip install -r requirements.txt;
