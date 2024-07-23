@@ -3,7 +3,7 @@ Here we provide the yaml files and instructions to train SSD model on Voyager.
 
 ## Overview
 
-The model is supported by Intel-Habana. More details can be found in their [repository](https://github.com/HabanaAI/Model-References/tree/1.13.0/PyTorch/computer_vision/detection/mlcommons/SSD/ssd). This tutorial uses SynapseAI v1.13.
+The model is supported by Intel-Habana. More details can be found in their [repository](https://github.com/HabanaAI/Model-References/tree/1.13.0/PyTorch/computer_vision/detection/mlcommons/SSD/ssd). This tutorial uses SynapseAI v1.15.1.
 
 
 Single Shot MultiBox Detector (SSD) is an object detection network. For an input image, the network outputs a set of bounding boxes around the detected objects, along with their classes.

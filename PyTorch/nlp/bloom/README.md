@@ -1,5 +1,5 @@
 # Inference of BLOOM using PyTorch
-This directory provides the yaml files and instructions to run inference on different BLOOM models. The models were developed and trained by Hugginface. They were ported to [Habana's HPU accelerator](https://github.com/HabanaAI/Model-References/tree/1.13.0/PyTorch/nlp/bloom).
+This directory provides the yaml files and instructions to run inference on different BLOOM models(and actually any Huggifance Transformer model). The models were developed and trained by Hugginface. They were ported to [Habana's HPU accelerator](https://github.com/HabanaAI/Model-References/tree/1.13.0/PyTorch/nlp/bloom).
 
 ## Model overview
 
@@ -32,7 +32,7 @@ export PYTHONPATH=/scratch/Model-References:$PYTHONPATH;
 export PATH=/scratch/tmp/.local/bin:$PATH;
 mkdir -p /scratch/tmp/;
 cd /scratch;
-git clone -b 1.13.0 https://github.com/HabanaAI/Model-References;
+git clone -b 1.15.1 https://github.com/HabanaAI/Model-References;
 cd Model-References/PyTorch/nlp/bloom;
 python3 -m pip install -r requirements.txt;
 python3 ./bloom.py --weights /dataset --model bloom-3b --options "max_length=32" "Do robots think?";

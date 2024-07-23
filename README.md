@@ -21,9 +21,9 @@ The list of models is being improved. Your feedback is greatly appreciated. Feel
 | [MobileNetV2](PyTorch/computer_vision/classification/torchvision)                       | Pytorch           |  Yes       |  1.15.1  |
 | [GoogLeNet](PyTorch/computer_vision/classification/torchvision)                         | Pytorch           |  Yes       |  1.15.1  |
 | [UNet2D,UNet3D](PyTorch/computer_vision/segmentation/unet)                              | Pytorch Lightning |            |  1.13    |
-| [YOLOX](PyTorch/computer_vision/detection/yolox)                                        | Pytorch           |  Yes       |  1.13    |
-| [SSD](PyTorch/computer_vision/detection/ssd)                                            | Pytorch           |            |  1.13    |
-| [Vision Transformer](PyTorch/computer_vision/classification/ViT)                        | Pytorch           |  Yes       |  1.13    |
+| [YOLOX](PyTorch/computer_vision/detection/yolox)                                        | Pytorch           |  Yes       |  1.15.1  |
+| [SSD](PyTorch/computer_vision/detection/ssd)                                            | Pytorch           |            |  1.15.1  |
+| [Vision Transformer](PyTorch/computer_vision/classification/ViT)                        | Pytorch           |  Yes       |  1.15.1  |
 | [UNet-2D](TensorFlow/computer_vision/Unet2D)                                            | TensorFlow        |  Yes       |  1.13    |
 | [ResNet50 (Keras)](TensorFlow/computer_vision/Resnets/resnet_keras)                     | TensorFlow        |  Yes       |  1.13    |
 | [ResNeXt101](TensorFlow/computer_vision/Resnets/ResNeXt)                                | TensorFlow        |  Yes       |  1.13    |
@@ -34,7 +34,7 @@ The list of models is being improved. Your feedback is greatly appreciated. Feel
 | ------------------------------------------------------------------------------ | ---------- | ----------- | -------- |
 | [BERT](PyTorch/nlp/bert)                                                       | Pytorch    |  Yes        |   1.13   |
 | [BART (fine-tuning,simpletransformers)](PyTorch/nlp/BART)                      | Pytorch    |  Yes        |   1.13   |
-| [Hugginface BLOOM (inference)](PyTorch/nlp/bloom)                              | Pytorch    |             |   1.13   |
+| [Hugginface BLOOM (inference)](PyTorch/nlp/bloom)                              | Pytorch    |             |   1.15.1 |
 | [LLaMA (Megatron-DeepSpeed)](PyTorch/nlp/DeepSpeedExamples/Megatron-DeepSpeed) | Pytorch    |  Yes        |   1.13   |
 | [BERT](TensorFlow/nlp/bert)                                                    | TensorFlow |             |   1.13   |
 

@@ -3,7 +3,7 @@ Here we provide the yaml files and instructions to train the Vision Transformer 
 
 ## Overview
 
-The model is supported by Intel-Habana. More details can be found in their [repository](https://github.com/HabanaAI/Model-References/tree/1.13.0/PyTorch/computer_vision/classification/ViT). This tutorial uses SynapseAI v1.13.
+The model is supported by Intel-Habana. More details can be found in their [repository](https://github.com/HabanaAI/Model-References/tree/1.13.0/PyTorch/computer_vision/classification/ViT). This tutorial uses SynapseAI v1.15.1.
 
 This is a PyTorch implementation of the Vision Transformer model described in [An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale](https://arxiv.org/abs/2010.11929) paper. It is based on an earlier implementation from [PyTorch Image Models(timm)](https://github.com/rwightman/pytorch-image-models) and the [official repository](https://github.com/google-research/vision_transformer).
 

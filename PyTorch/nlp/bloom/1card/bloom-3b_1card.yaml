@@ -13,7 +13,7 @@ spec:
         type: Directory
   containers:
     - name: gaudi-container
-      image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu22.04/habanalabs/pytorch-installer-2.1.0:latest
+      image: vault.habana.ai/gaudi-docker/1.15.1/ubuntu22.04/habanalabs/pytorch-installer-2.2.0:latest
       volumeMounts:
         - mountPath: /scratch
           name: scratch
@@ -41,7 +41,7 @@ spec:
           export PATH=/scratch/tmp/.local/bin:$PATH;
           mkdir -p /scratch/tmp/;
           cd /scratch;
-          git clone -b 1.13.0 https://github.com/HabanaAI/Model-References;
+          git clone -b 1.15.1 https://github.com/HabanaAI/Model-References;
           cd Model-References/PyTorch/nlp/bloom;
           python3 -m pip install -r requirements.txt;
           python3 ./bloom.py --weights /dataset --model bloom-3b --options "max_length=32" "Do robots think?";
