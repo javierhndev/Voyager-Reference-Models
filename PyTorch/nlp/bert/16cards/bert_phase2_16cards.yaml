@@ -2,7 +2,7 @@ apiVersion: kubeflow.org/v2beta1
 kind: MPIJob
 metadata:
   name: yourusername-bert-16cards
-  namespace: default
+  namespace: yourusername-restricted
 spec:
   slotsPerWorker: 8
   runPolicy:
@@ -12,10 +12,13 @@ spec:
       replicas: 1
       template:
         spec:
+          nodeSelector:
+            brightcomputing.com/node-category: 'compute'
+          serviceAccountName: yourusername
           volumes:
             - name: mydir
               hostPath:
-                path: /home/yourusername/models/voyager/bert_pytorch/1.13.0/multicard
+                path: /home/yourusername/models/voyager/bert_pytorch/1.15.1/multicard/fp32
                 type: Directory
             - name: scratch
               emptyDir: {}
@@ -33,8 +36,15 @@ spec:
                 type: Directory
           hostIPC: true
           containers:
-            - image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu22.04/habanalabs/pytorch-installer-2.1.0:latest
+            - image: vault.habana.ai/gaudi-docker/1.15.1/ubuntu22.04/habanalabs/pytorch-installer-2.2.0:latest
               name: bert-launcher
+              resources:
+                requests:
+                  cpu: 2
+                  memory: 4Gi
+                limits:
+                  cpu: 4
+                  memory: 8Gi
               volumeMounts:
                 - name: mydir
                   mountPath: /mydir
@@ -46,13 +56,6 @@ spec:
                   mountPath: /output
                 - name: dllog
                   mountPath: /dllog
-                  #env:
-                  #- name: dataset
-                  #value: "/ceph/datasets/bert/pytorch"
-                  #- name: output
-                  #value: "/ceph/results/bert_pytorch/8cards"
-                  #- name: dllog
-                  #value: "/ceph/tmp/log_directory"
               command: ["/bin/bash", "-c"]
               args:
                 - >-
@@ -60,7 +63,7 @@ spec:
                   declare -xr NGPU_PER_NODE=8;
                   declare -xr N_CARDS=$((NUM_NODES*NGPU_PER_NODE));
 
-                  declare -xr SYNAPSE_AI_VER=1.13.0;
+                  declare -xr SYNAPSE_AI_VER=1.15.1;
                   declare -xr RUN_PATH=/mydir;
                   declare -xr MODEL_PATH=/scratch/Model-References/PyTorch/nlp/bert;
 
@@ -73,7 +76,7 @@ spec:
                   echo $MASTER_ADDR;
                   echo $MASTER_PORT;
 
-                  sleep 15s;
+                  sleep 20s;
 
                   mpirun  --npernode 1 \
                     --tag-output \
@@ -86,8 +89,6 @@ spec:
                   declare -xr CMD="python3 $MODEL_PATH/run_pretraining.py \
                                    --do_train \
                                    --bert_model=bert-large-uncased \
-                                   --autocast \
-                                   --use_lazy_mode=True \
                                    --config_file=$MODEL_PATH/bert_config.json \
                                    --use_habana \
                                    --allreduce_post_accumulation \
@@ -100,12 +101,12 @@ spec:
                                    --max_seq_length=512 \
                                    --max_predictions_per_seq=80 \
                                    --warmup_proportion=0.128 \
-                                   --max_steps=10 \
-                                   --num_steps_per_checkpoint=5 \
+                                   --max_steps=30 \
+                                   --num_steps_per_checkpoint=15 \
                                    --learning_rate=0.004 \
                                    --gradient_accumulation_steps=512 \
                                    --resume_from_checkpoint \
-                                   --phase1_end_step=15 \
+                                   --phase1_end_step=30 \
                                    --phase2 \
                                    --enable_packed_data_mode False" ;
                   
@@ -123,14 +124,17 @@ spec:
                     -x PYTHONPATH \
                     $CMD;
 
+                    #sleep infinity;
+
     Worker:
       replicas: 2
       template:
         spec:
+          serviceAccountName: yourusername
           volumes:
             - name: mydir
               hostPath:
-                path: /home/yourusername/models/voyager/bert_pytorch/1.13.0/multicard
+                path: /home/yourusername/models/voyager/bert_pytorch/1.15.1/multicard/fp32
                 type: Directory
             - name: scratch
               emptyDir: {}
@@ -148,7 +152,7 @@ spec:
                 type: Directory
           hostIPC: true
           containers:
-            - image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu22.04/habanalabs/pytorch-installer-2.1.0:latest
+            - image: vault.habana.ai/gaudi-docker/1.15.1/ubuntu22.04/habanalabs/pytorch-installer-2.2.0:latest
               name: bert-worker
               imagePullPolicy: Always
               resources:

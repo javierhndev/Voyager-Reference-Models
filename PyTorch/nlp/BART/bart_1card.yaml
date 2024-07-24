@@ -17,7 +17,7 @@ spec:
         type: Directory
   containers:
     - name: gaudi-container
-      image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu22.04/habanalabs/pytorch-installer-2.1.0:latest
+      image: vault.habana.ai/gaudi-docker/1.15.1/ubuntu22.04/habanalabs/pytorch-installer-2.2.0:latest
       volumeMounts:
         - mountPath: /scratch
           name: scratch
@@ -36,18 +36,13 @@ spec:
           cpu: 12
           habana.ai/gaudi: 1
           hugepages-2Mi: 95000Mi
-          #env:
-          #- name: dataset
-          #value: "/ceph/datasets/BART"
-          #- name: output
-          #value: "/ceph/results/BART/1card"
       command: ["/bin/sh","-c"]
       args:
         - hl-smi;
           export HOME=/scratch/tmp;
           mkdir -p /scratch/tmp/;
           cd /scratch;
-          git clone -b 1.13.0 https://github.com/HabanaAI/Model-References;
+          git clone -b 1.15.1 https://github.com/HabanaAI/Model-References;
           export PYTHONPATH=/scratch/Model-References:/scratch/Model-References/PyTorch/nlp/BART/simpletransformers:$PYTHONPATH;
           cd Model-References/PyTorch/nlp/BART/simpletransformers;
           pip install -e .;

@@ -2,7 +2,7 @@ apiVersion: kubeflow.org/v2beta1
 kind: MPIJob
 metadata:
   name: yourusername-bart-8cards
-  namespace: default
+  namespace: yourusername-restricted
 spec:
   slotsPerWorker: 8
   runPolicy:
@@ -12,10 +12,13 @@ spec:
       replicas: 1
       template:
         spec:
+          nodeSelector:
+            brightcomputing.com/node-category: 'compute'
+          serviceAccountName: yourusername
           volumes:
             - name: mydir
               hostPath:
-                path: /home/yourusername
+                path: /home/yourusername/models/voyager/bart/1.15.1
                 type: Directory
             - name: scratch
               emptyDir: {}
@@ -29,22 +32,24 @@ spec:
                 type: Directory
           hostIPC: true
           containers:
-            - image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu22.04/habanalabs/pytorch-installer-2.1.0:latest
+            - image: vault.habana.ai/gaudi-docker/1.15.1/ubuntu22.04/habanalabs/pytorch-installer-2.2.0:latest
               name: bart-launcher
+              resources:
+                requests:
+                  cpu: 2
+                  memory: 4Gi
+                limits:
+                  cpu: 4
+                  memory: 8Gi
               volumeMounts:
                 - name: mydir
-                  mountPath: /home
+                  mountPath: /mydir
                 - name: scratch
                   mountPath: /scratch
                 - name: dataset
                   mountPath: /dataset
                 - name: output
                   mountPath: /output
-                  #env:
-                  #- name: dataset
-                  # value: "/ceph/datasets/BART"
-                  #- name: output
-                  #value: "/ceph/results/BART/8cards"
               command: ["/bin/bash", "-c"]
               args:
                 - >-
@@ -52,8 +57,8 @@ spec:
                   declare -xr NGPU_PER_NODE=8;
                   declare -xr N_CARDS=$((NUM_NODES*NGPU_PER_NODE));
 
-                  declare -xr SYNAPSE_AI_VER=1.13.0;
-                  declare -xr RUN_PATH=/home/models/voyager/bart/1.13/;
+                  declare -xr SYNAPSE_AI_VER=1.15.1;
+                  declare -xr RUN_PATH=/mydir;
                   declare -xr MODEL_PATH=/scratch/Model-References/PyTorch/nlp/BART/simpletransformers;
 
                   declare -xr PYTHONPATH=/scratch/Model-References:/scratch/Model-References/PyTorch/nlp/BART/simpletransformers:$PYTHONPATH;
@@ -102,16 +107,17 @@ spec:
                     -x PYTHONPATH \
                     $CMD;
 
-                  sleep infinity;
+                    #sleep infinity;
 
     Worker:
       replicas: 1
       template:
         spec:
+          serviceAccountName: yourusername
           volumes:
             - name: mydir
               hostPath:
-                path: /home/yourusername
+                path: /home/yourusername/models/voyager/bart/1.15.1
                 type: Directory
             - name: scratch
               emptyDir: {}
@@ -125,7 +131,7 @@ spec:
                 type: Directory
           hostIPC: true
           containers:
-            - image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu22.04/habanalabs/pytorch-installer-2.1.0:latest
+            - image: vault.habana.ai/gaudi-docker/1.15.1/ubuntu22.04/habanalabs/pytorch-installer-2.2.0:latest
               name: bart-worker
               imagePullPolicy: Always
               resources:
@@ -141,7 +147,7 @@ spec:
                   hugepages-2Mi: 95000Mi
               volumeMounts:
                 - name: mydir
-                  mountPath: /home
+                  mountPath: /mydir
                 - name: scratch
                   mountPath: /scratch
                 - name: dataset

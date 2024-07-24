@@ -1,7 +1,7 @@
 # BERT model using PyTorch
 Here we provide the scripts and files to download the dataset and train a BERT model on Voyager using Pytorch. The model is mantained by Habana and you can find it in their [repository](https://github.com/HabanaAI/Model-References/tree/1.13.0/PyTorch/nlp/bert). Please check their repository for a deeper explanation of the BERT model.
 
-The model was verified on Voyager with SynapseAI version 1.13.
+The model was verified on Voyager with SynapseAI version 1.15.1.
 
 ## Model Overview
 
@@ -98,7 +98,7 @@ All the pre-training examples shown here run a few timesteps to test the model. 
   export PATH=/scratch/tmp/.local/bin:$PATH;
   mkdir -p /scratch/tmp/;
   cd /scratch;
-  git clone -b 1.13.0 https://github.com/HabanaAI/Model-References;
+  git clone -b 1.15.1 https://github.com/HabanaAI/Model-References;
   export PYTHONPATH=/scratch/Model-References:$PYTHONPATH;
   cd Model-References/PyTorch/nlp/bert;
   pip install -r requirements.txt;
@@ -119,7 +119,7 @@ All the pre-training examples shown here run a few timesteps to test the model. 
 
 Many parameters passed to the model are the same as in a single card. But the *yaml* files have been modified to run in multiple HPUs. Here we launch an MPIJob to run the model in one node (with 8 cards).
 
-- Pretraining **Phase 1** of BERT Large (Lazy mode, 8 HPUs, unpacked data, BF16 mixed precision, per chip batch size of 64). The MPIJob can be launched using the `bert_phase1_8cards.yaml` located in the `8 cards` folder. You need to modify the `mydir` volumes to point to the location of your `yaml` and `setup.sh` files.
+- Pretraining **Phase 1** of BERT Large (Lazy mode, 8 HPUs, unpacked data, FP32, per chip batch size of 64). The MPIJob can be launched using the `bert_phase1_8cards.yaml` located in the `8 cards` folder. You need to modify the `mydir` volumes to point to the location of your `yaml` and `setup.sh` files.
 
   Remeber to change the *dataset, dllog* and *output* folders to your own. In the launcher AND worker.
 
@@ -127,8 +127,6 @@ Many parameters passed to the model are the same as in a single card. But the *y
   python3 $MODEL_PATH/run_pretraining.py \
               --do_train \
               --bert_model=bert-large-uncased \
-              --autocast \
-              --use_lazy_mode=True \
               --config_file=$MODEL_PATH/bert_config.json \
               --use_habana \
               --allreduce_post_accumulation \
@@ -154,8 +152,6 @@ Many parameters passed to the model are the same as in a single card. But the *y
   python3 $MODEL_PATH/run_pretraining.py \
             --do_train \
             --bert_model=bert-large-uncased \
-            --autocast \
-            --use_lazy_mode=True \
             --config_file=$MODEL_PATH/bert_config.json \
             --use_habana \
             --allreduce_post_accumulation \

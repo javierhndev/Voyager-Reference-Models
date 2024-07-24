@@ -21,7 +21,7 @@ spec:
         type: Directory
   containers:
     - name: gaudi-container
-      image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu22.04/habanalabs/pytorch-installer-2.1.0:latest
+      image: vault.habana.ai/gaudi-docker/1.15.1/ubuntu22.04/habanalabs/pytorch-installer-2.2.0:latest
       volumeMounts:
         - mountPath: /scratch
           name: scratch
@@ -42,13 +42,6 @@ spec:
           cpu: 12
           habana.ai/gaudi: 1
           hugepages-2Mi: 95000Mi
-          #env:
-          #- name: dataset
-          #value: "/ceph/datasets/bert/pytorch"
-          #- name: output
-          #value: "/ceph/results/bert_pytorch/1card"
-          #- name: dllog
-          #value: "/ceph/tmp/log_directory"
       command: ["/bin/sh","-c"]
       args:
         - >- 
@@ -57,7 +50,7 @@ spec:
             export PATH=/scratch/tmp/.local/bin:$PATH;
             mkdir -p /scratch/tmp/;
             cd /scratch;
-            git clone -b 1.13.0 https://github.com/HabanaAI/Model-References;
+            git clone -b 1.15.1 https://github.com/HabanaAI/Model-References;
             export PYTHONPATH=/scratch/Model-References:$PYTHONPATH;
             cd Model-References/PyTorch/nlp/bert;
             pip install -r requirements.txt;
@@ -70,6 +63,3 @@ spec:
                     --warmup_proportion=0.2843 --num_steps_per_checkpoint=5 --learning_rate=0.006 --gradient_accumulation_steps=128 \
                     --enable_packed_data_mode False ;
 
-
-                    #pip install h5py==3.10.0 boto3==1.26.75 git+https://github.com/NVIDIA/dllogger.git@26a0f8f1958de2c0c460925ff6102a4d2486d6cc;
- 

@@ -2,7 +2,7 @@ apiVersion: kubeflow.org/v2beta1
 kind: MPIJob
 metadata:
   name: yourusername-unet2d-16cards
-  namespace: default
+  namespace: yourusername-restricted
 spec:
   slotsPerWorker: 8
   runPolicy:
@@ -12,10 +12,13 @@ spec:
       replicas: 1
       template:
         spec:
+          nodeSelector:
+            brightcomputing.com/node-category: 'compute'
+          serviceAccountName: yourusername
           volumes:
             - name: mydir
               hostPath:
-                path: /home/yourusername/models/voyager/unet2d_tf/1.13.0
+                path: /home/yourusername/models/voyager/unet2d_tf/1.15.1
                 type: Directory
             - name: scratch
               emptyDir: {}
@@ -25,11 +28,18 @@ spec:
                 type: Directory
             - name: output
               hostPath:
-                path: /voyager/ceph/users/yourusername/results/unet2d_tf/16cards
+                path: /voyager/ceph/users/yourusername/results/unet2d_tf/8cards
                 type: Directory
           containers:
             - image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu22.04/habanalabs/tensorflow-installer-tf-cpu-2.13.1
               name: unet2d-launcher
+              resources:
+                requests:
+                  cpu: 2
+                  memory: 4Gi
+                limits:
+                  cpu: 4
+                  memory: 8Gi
               volumeMounts:
                 - name: mydir
                   mountPath: /mydir
@@ -39,11 +49,6 @@ spec:
                   mountPath: /dataset
                 - name: output
                   mountPath: /output
-                  #env:
-                  #- name: dataset
-                  #value: "/ceph/datasets/UNet2D_tf"
-                  #- name: out
-                  #value: "/ceph/results/unet2d_tf/8cards"                
               command: ["/bin/bash", "-c"]
               args:
                 - >-
@@ -84,16 +89,18 @@ spec:
                     --tag-output \
                     --merge-stderr-to-stdout --prefix $MPI_ROOT \
                     -x PYTHONPATH \
+                    -x HOME \
                     $CMD;
 
     Worker:
       replicas: 2
       template:
         spec:
+          serviceAccountName: yourusername
           volumes:
             - name: mydir
               hostPath:
-                path: /home/yourusername/models/voyager/unet2d_tf/1.13.0
+                path: /home/yourusername/models/voyager/unet2d_tf/1.15.1
                 type: Directory
             - name: scratch
               emptyDir: {}
@@ -103,7 +110,7 @@ spec:
                 type: Directory
             - name: output
               hostPath:
-                path: /voyager/ceph/users/yourusername/results/unet2d_tf/16cards
+                path: /voyager/ceph/users/yourusername/results/unet2d_tf/8cards
                 type: Directory
           containers:
             - image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu22.04/habanalabs/tensorflow-installer-tf-cpu-2.13.1

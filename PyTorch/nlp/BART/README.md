@@ -1,7 +1,7 @@
 # BART model using PyTorch and simpletransformers
 This folder contains the scripts and instructions to fine-tune the BART model on Voyager. The model is mantained by Habana and you can find it in their [repository](https://github.com/HabanaAI/Model-References/tree/1.13.0/PyTorch/nlp/BART/simpletransformers) for a deeper explanation of the model.
  
-The model was verified on Voyager with SynapseAI version 1.13.
+The model was verified on Voyager with SynapseAI version 1.15.1.
 
 
 
@@ -39,7 +39,7 @@ This will dowload the datasert to `./data` folder. Remember to use this folder w
   export HOME=/scratch/tmp;
   mkdir -p /scratch/tmp/;
   cd /scratch;
-  git clone -b 1.13.0 https://github.com/HabanaAI/Model-References;
+  git clone -b 1.15.1 https://github.com/HabanaAI/Model-References;
   export PYTHONPATH=/scratch/Model-References:/scratch/Model-References/PyTorch/nlp/BART/simpletransformers:$PYTHONPATH;
   cd Model-References/PyTorch/nlp/BART/simpletransformers;
   pip install -e .;
