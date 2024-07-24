@@ -20,7 +20,7 @@ The list of models is being improved. Your feedback is greatly appreciated. Feel
 | [ResNet50 (Pytorch Lightning)](PyTorch/computer_vision/classification/lightning/resnet) | Pytorch Lightning |            |  1.13    |
 | [MobileNetV2](PyTorch/computer_vision/classification/torchvision)                       | Pytorch           |  Yes       |  1.15.1  |
 | [GoogLeNet](PyTorch/computer_vision/classification/torchvision)                         | Pytorch           |  Yes       |  1.15.1  |
-| [UNet2D,UNet3D](PyTorch/computer_vision/segmentation/unet)                              | Pytorch Lightning |            |  1.13    |
+| [UNet2D,UNet3D](PyTorch/computer_vision/segmentation/unet)                              | Pytorch Lightning |            |  1.15.1  |
 | [YOLOX](PyTorch/computer_vision/detection/yolox)                                        | Pytorch           |  Yes       |  1.15.1  |
 | [SSD](PyTorch/computer_vision/detection/ssd)                                            | Pytorch           |            |  1.15.1  |
 | [Vision Transformer](PyTorch/computer_vision/classification/ViT)                        | Pytorch           |  Yes       |  1.15.1  |
@@ -42,4 +42,4 @@ The list of models is being improved. Your feedback is greatly appreciated. Feel
 | Models                                                                                           | Framework  | Multi-node | Verified |
 | ------------------------------------------------------------------------------------------------ | ---------- | ---------- | -------- |
 | [(Not supported now) Stable-Diffusion](PyTorch/generative_models/stable-diffusion)               | Pytorch    |            |   1.11   | 
-| [Stable-Diffusion 2.1 (Inference, Huggingface)](PyTorch/generative_models/stable-diffusion-v2-1) | Pytorch    |            |   1.13   |
+| [Stable-Diffusion 2.1 (Inference, Huggingface)](PyTorch/generative_models/stable-diffusion-v2-1) | Pytorch    |            |   1.15.1 |

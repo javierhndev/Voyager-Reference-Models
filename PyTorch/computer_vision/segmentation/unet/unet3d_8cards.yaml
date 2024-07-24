@@ -2,7 +2,7 @@ apiVersion: kubeflow.org/v2beta1
 kind: MPIJob
 metadata:
   name: yourusername-unet3d-8cards
-  namespace: default
+  namespace: yourusername-restricted
 spec:
   slotsPerWorker: 8
   runPolicy:
@@ -12,10 +12,13 @@ spec:
       replicas: 1
       template:
         spec:
+          nodeSelector:
+            brightcomputing.com/node-category: 'compute'
+          serviceAccountName: yourusername
           volumes:
             - name: mydir
               hostPath:
-                path: /home/yourusername/models/voyager/unet_pytorch/1.13
+                path: /home/yourusername/models/voyager/unet_pytorch/1.15.1
                 type: Directory
             - name: scratch
               emptyDir: {}
@@ -29,8 +32,15 @@ spec:
                 type: Directory
           hostIPC: true
           containers:
-            - image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu20.04/habanalabs/pytorch-installer-2.1.0:latest
+            - image: vault.habana.ai/gaudi-docker/1.15.1/ubuntu22.04/habanalabs/pytorch-installer-2.2.0:latest
               name: unet-launcher
+              resources:
+                requests:
+                  cpu: 2
+                  memory: 4Gi
+                limits:
+                  cpu: 4
+                  memory: 8Gi
               volumeMounts:
                 - name: mydir
                   mountPath: /mydir
@@ -40,13 +50,6 @@ spec:
                   mountPath: /dataset
                 - name: output
                   mountPath: /output
-                  #env:
-                  #- name: dataset
-                  #value: "/ceph/datasets/bert/pytorch"
-                  #- name: output
-                  #value: "/ceph/results/bert_pytorch/8cards"
-                  #- name: dllog
-                  #value: "/ceph/tmp/log_directory"
               command: ["/bin/bash", "-c"]
               args:
                 - >-
@@ -54,7 +57,7 @@ spec:
                   declare -xr NGPU_PER_NODE=8;
                   declare -xr N_CARDS=$((NUM_NODES*NGPU_PER_NODE));
 
-                  declare -xr SYNAPSE_AI_VER=1.13.0;
+                  declare -xr SYNAPSE_AI_VER=1.15.1;
                   declare -xr RUN_PATH=/mydir;
                   declare -xr MODEL_PATH=/scratch/Model-References/PyTorch/computer_vision/segmentation/Unet;
 
@@ -97,10 +100,11 @@ spec:
       replicas: 1
       template:
         spec:
+          serviceAccountName: yourusername
           volumes:
             - name: mydir
               hostPath:
-                path: /home/yourusername/models/voyager/unet_pytorch/1.13
+                path: /home/yourusername/models/voyager/unet_pytorch/1.15.1
                 type: Directory
             - name: scratch
               emptyDir: {}
@@ -114,7 +118,7 @@ spec:
                 type: Directory
           hostIPC: true
           containers:
-            - image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu20.04/habanalabs/pytorch-installer-2.1.0:latest
+            - image: vault.habana.ai/gaudi-docker/1.15.1/ubuntu22.04/habanalabs/pytorch-installer-2.2.0:latest
               name: unet-worker
               imagePullPolicy: Always
               resources:

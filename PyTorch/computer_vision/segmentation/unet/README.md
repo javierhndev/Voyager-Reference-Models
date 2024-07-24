@@ -4,7 +4,7 @@ Here we provide the yaml files and instructions to train the UNet2D and UNet3D m
 
 ## Overview
 
-The model is supported by Intel-Habana. More details can be found in their [repository](https://github.com/HabanaAI/Model-References/tree/1.13.0/PyTorch/computer_vision/segmentation/Unet). This tutorial uses SynapseAI v1.13.
+The model is supported by Intel-Habana. More details can be found in their [repository](https://github.com/HabanaAI/Model-References/tree/1.13.0/PyTorch/computer_vision/segmentation/Unet). This tutorial uses SynapseAI v1.15.1.
 
 
 

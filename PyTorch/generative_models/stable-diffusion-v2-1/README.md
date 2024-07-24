@@ -3,7 +3,7 @@ Here we provide the yaml files and instructions to run inference on Stable Diffu
 
 ## Overview
 
-The model is supported by Intel-Habana. More details can be found in their [repository](https://github.com/HabanaAI/Model-References/tree/1.13.0/PyTorch/generative_models/stable-diffusion-v-2-1). This tutorial uses SynapseAI v1.13.
+The model is supported by Intel-Habana. More details can be found in their [repository](https://github.com/HabanaAI/Model-References/tree/1.15.1/PyTorch/generative_models/stable-diffusion-v-2-1). This tutorial uses SynapseAI v1.15.1.
 
 This implementation is based on the following paper - [High-Resolution Image Synthesis with Latent Diffusion Models](https://arxiv.org/abs/2112.10752) that uses a fixed, pretrained text encoder [(OpenCLIP-ViT/H)](https://github.com/mlfoundations/open_clip). The [model](https://github.com/Stability-AI/stablediffusion/) uses [Hugginface](https://huggingface.co/stabilityai/stable-diffusion-2-1) transformers. 
 
