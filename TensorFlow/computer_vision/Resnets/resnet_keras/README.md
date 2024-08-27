@@ -1,8 +1,12 @@
 # UNet-2D model using TensorFlow
+**------**
+**------**
+(**NOTE:** Tensorflow is no longer officially supported on Intel Gaudi accelarators. However we have checked that this model still works on the Synpase 1.15.1 (using 1.13 image))
+**------**
+**------**
+Here we provide the scripts and instructions to download the dataset and train the ResNet50 Keras model on Voyager using TensorFlow.  The model was mantained by Intel Habana and you can find it in their [repository](https://github.com/HabanaAI/Model-References/tree/1.13.0/TensorFlow/computer_vision/Resnets/resnet_keras). Please check their repository for a deeper explanation of the model. The ResNet Keras model is a modified version of the original model located in [TensorFlow Model Garden](https://github.com/tensorflow/models/tree/master/official/legacy/image_classification/resnet). It uses a custom training loop, supports 50 layers and can work with both SGD and LARS optimizers.
 
-Here we provide the scripts and instructions to download the dataset and train the ResNet50 Keras model on Voyager using TensorFlow.  The model is mantained by Habanai Labs and you can find it in their [repository](https://github.com/HabanaAI/Model-References/tree/1.13.0/TensorFlow/computer_vision/Resnets/resnet_keras). Please check their repository for a deeper explanation of the model. The ResNet Keras model is a modified version of the original model located in [TensorFlow Model Garden](https://github.com/tensorflow/models/tree/master/official/legacy/image_classification/resnet). It uses a custom training loop, supports 50 layers and can work with both SGD and LARS optimizers.
-
-The model was verified on Voyager with SynapseAI version 1.13.
+The model was verified on Voyager with SynapseAI version 1.15.1.
 
 ## Data downloading and preparation
 

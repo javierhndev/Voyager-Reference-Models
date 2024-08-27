@@ -1,10 +1,15 @@
 # ResNeXt for TensorFlow
+**------**
+**------**
+(**NOTE:** Tensorflow is no longer officially supported on Intel Gaudi accelarators. However we have checked that this model still works on the Synpase 1.15.1 (using 1.13 image))
+**------**
+**------**
 Here we provide the yaml files and instructions to train the ResNeXt model (TensorFlow) on Voyager.
 
 
 ## Overview
 
-The model is supported by Intel-Habana. More details can be found in their [repository](https://github.com/HabanaAI/Model-References/tree/1.13.0/TensorFlow/computer_vision/Resnets/ResNeXt). This tutorial uses SynapseAI v1.13.
+The model was supported by Intel-Habana. More details can be found in their [repository](https://github.com/HabanaAI/Model-References/tree/1.13.0/TensorFlow/computer_vision/Resnets/ResNeXt). This tutorial uses SynapseAI v1.15.1.
 
 ResNeXt is a modified version of the original ResNet v1 model. This implementation defines ResNeXt101 which features 101 layers.
 
