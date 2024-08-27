@@ -1,8 +1,8 @@
 apiVersion: kubeflow.org/v2beta1
 kind: MPIJob
 metadata:
-  name: yourusername-resnet-8cards
-  namespace: default
+  name: javierhn-resnet-8cards
+  namespace: javierhn-restricted
 spec:
   slotsPerWorker: 8
   runPolicy:
@@ -12,24 +12,34 @@ spec:
       replicas: 1
       template:
         spec:
+          nodeSelector:
+            brightcomputing.com/node-category: 'compute'
+          serviceAccountName: javierhn
           volumes:
             - name: mydir
               hostPath:
-                path: /home/yourusername
+                path: /home/javierhn/models/voyager/resnet_lightning/1.15.1/multicard
                 type: Directory
             - name: scratch
               emptyDir: {}
             - name: ceph
               hostPath:
-                path: /voyager/ceph/users/yourusername
+                path: /voyager/ceph/users/javierhn
                 type: Directory
           hostIPC: true
           containers:
-            - image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu22.04/habanalabs/pytorch-installer-2.1.0:latest
+            - image: vault.habana.ai/gaudi-docker/1.15.1/ubuntu22.04/habanalabs/pytorch-installer-2.2.0:latest
               name: resnet-launcher
+              resources:
+                requests:
+                  cpu: 2
+                  memory: 4Gi
+                limits:
+                  cpu: 4
+                  memory: 8Gi
               volumeMounts:
                 - name: mydir
-                  mountPath: /home
+                  mountPath: /mydir
                 - name: scratch
                   mountPath: /scratch
                 - name: ceph
@@ -46,7 +56,7 @@ spec:
 
                   declare -xr SYNAPSE_AI_VER=1.13.0
 
-                  declare -xr RUN_PATH=/home/models/voyager/resnet_lightning;
+                  declare -xr RUN_PATH=/mydir;
                   declare -xr MODEL_PATH=/scratch/Model-References/PyTorch/computer_vision/classification/lightning/resnet/;
 
                   declare -xr PYTHONPATH=$PYTHONPATH:/scratch/Model-References;
@@ -81,26 +91,27 @@ spec:
                     -x N_CARDS \
                     $RUN_PATH/run_resnet.sh;
 
-                    #sleep infinity;
+                    sleep infinity;
 
     Worker:
       replicas: 1
       template:
         spec:
+          serviceAccountName: javierhn
           volumes:
             - name: mydir
               hostPath:
-                path: /home/yourusername
+                path: /home/javierhn/models/voyager/resnet_lightning/1.15.1/multicard
                 type: Directory
             - name: scratch
               emptyDir: {}
             - name: ceph
               hostPath:
-                path: /voyager/ceph/users/yourusername
+                path: /voyager/ceph/users/javierhn
                 type: Directory
           hostIPC: true
           containers:
-            - image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu22.04/habanalabs/pytorch-installer-2.1.0:latest
+            - image: vault.habana.ai/gaudi-docker/1.15.1/ubuntu22.04/habanalabs/pytorch-installer-2.2.0:latest
               name: resnet50-worker
               imagePullPolicy: Always
               resources:
@@ -116,7 +127,7 @@ spec:
                   hugepages-2Mi: 95000Mi
               volumeMounts:
                 - name: mydir
-                  mountPath: /home
+                  mountPath: /mydir
                 - name: scratch
                   mountPath: /scratch
                 - name: ceph

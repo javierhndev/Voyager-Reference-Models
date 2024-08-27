@@ -9,11 +9,11 @@ spec:
       emptyDir: {}
     - name: ceph
       hostPath:
-         path: /voyager/ceph/users/yourusername
-         type: Directory
+        path: /voyager/ceph/users/javierhn
+        type: Directory
   containers:
     - name: gaudi-container
-      image: vault.habana.ai/gaudi-docker/1.13.0/ubuntu22.04/habanalabs/pytorch-installer-2.1.0:latest
+      image: vault.habana.ai/gaudi-docker/1.15.1/ubuntu22.04/habanalabs/pytorch-installer-2.2.0:latest
       volumeMounts:
         - mountPath: /scratch
           name: scratch
@@ -41,6 +41,8 @@ spec:
             cd /scratch;
             mkdir -p tmp;
             git clone -b 1.13.0 https://github.com/HabanaAI/Model-References;
+            pwd;
+            ls;
             cd Model-References/PyTorch/computer_vision/classification/lightning/resnet/;
             pip install -r requirements.txt;
             export PYTHONPATH=/scratch/Model-References:$PYTHONPATH;

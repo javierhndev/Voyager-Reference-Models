@@ -1,10 +1,11 @@
 # ResNet50 for Pytorch Lightning
+(**NOTE**: The model is no longer supported by Intel Habana in their last SynapaseAI versions but we have verified that it works on Voyager)
 Here we provide the yaml files and instructions to train the ResNet50 model, using PyTorch Lightning, on Voyager.
 
 
 ## Overview
 
-The model is supported by Intel-Habana. More details can be found in their [repository](https://github.com/HabanaAI/Model-References/tree/1.13.0/PyTorch/computer_vision/classification/lightning/resnet). This tutorial uses SynapseAI v1.13.
+The model was supported by Intel-Habana. More details can be found in their [repository](https://github.com/HabanaAI/Model-References/tree/1.13.0/PyTorch/computer_vision/classification/lightning/resnet). This tutorial uses SynapseAI v1.15.1 (but the model was written for 1.13).
 
 
 

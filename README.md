@@ -17,7 +17,7 @@ The list of models is being improved. Your feedback is greatly appreciated. Feel
 | Models                                                                                  | Framework         | Multi-node | Verified |
 | --------------------------------------------------------------------------------------- | ----------------- | ---------- | -------- |
 | [ResNet50, ResNet152, ResNeXt101](PyTorch/computer_vision/classification/torchvision)   | Pytorch           |  Yes       |  1.15.1  |
-| [ResNet50 (Pytorch Lightning)](PyTorch/computer_vision/classification/lightning/resnet) | Pytorch Lightning |            |  1.13    |
+| [ResNet50 (Pytorch Lightning)](PyTorch/computer_vision/classification/lightning/resnet) | Pytorch Lightning |            |  1.15.1  |
 | [MobileNetV2](PyTorch/computer_vision/classification/torchvision)                       | Pytorch           |  Yes       |  1.15.1  |
 | [GoogLeNet](PyTorch/computer_vision/classification/torchvision)                         | Pytorch           |  Yes       |  1.15.1  |
 | [UNet2D,UNet3D](PyTorch/computer_vision/segmentation/unet)                              | Pytorch Lightning |            |  1.15.1  |
