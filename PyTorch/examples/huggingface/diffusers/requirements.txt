@@ -1,1 +1,1 @@
-optimum-habana==1.11.1
+optimum-habana==1.13.1
