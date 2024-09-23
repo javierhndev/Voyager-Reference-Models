@@ -1,0 +1,128 @@
+apiVersion: kubeflow.org/v2beta1
+kind: MPIJob
+metadata:
+  name: yourusername-bert-16cards
+  namespace: yourusername-restricted
+spec:
+  slotsPerWorker: 8
+  runPolicy:
+    cleanPodPolicy: Running
+  mpiReplicaSpecs:
+    Launcher:
+      replicas: 1
+      template:
+        spec:
+          nodeSelector:
+            brightcomputing.com/node-category: 'compute'
+          serviceAccountName: yourusername
+          volumes:
+            - name: mydir
+              hostPath:
+                path: /home/yourusername/models/voyager/bert_deepspeed/1.15.1
+                type: Directory
+            - name: scratch
+              emptyDir: {}
+              #- name: output
+              #hostPath:
+              #path: /voyager/ceph/users/yourusername/results/llama/1.13
+              # type: Directory
+            - name: dataset
+              hostPath:
+                path: /voyager/ceph/users/yourusername/datasets/bert/pytorch
+                type: Directory
+          hostIPC: true
+          containers:
+            - image: vault.habana.ai/gaudi-docker/1.15.1/ubuntu22.04/habanalabs/pytorch-installer-2.2.0:latest
+              name: bert-launcher
+              resources:
+                requests:
+                  cpu: 2
+                  memory: 4Gi
+                limits:
+                  cpu: 4
+                  memory: 8Gi
+              volumeMounts:
+                - name: mydir
+                  mountPath: /mydir
+                - name: scratch
+                  mountPath: /scratch
+                  #- name: output
+                  #mountPath: /output
+                - name: dataset
+                  mountPath: /dataset
+                  #env:
+                  #- name: results
+                  #value: "/ceph/results/llama"
+              command: ["/bin/bash", "-c"]
+              args:
+                - >-
+                  declare -xr NUM_NODES=2;
+                  declare -xr SYNAPSE_AI_VER=1.15.1;
+                  declare -xr RUN_PATH=/mydir;
+                  declare -xr MODEL_ROOT=/scratch/Model-References;
+                  declare -xr MODEL_PATH=$MODEL_ROOT/PyTorch/nlp/DeepSpeedExamples/deepspeed-bert;
+
+                  declare -xr PYTHONPATH=$PYTHONPATH:/scratch/Model-References;
+
+                  sleep 10s;
+                  $RUN_PATH/setup.sh;
+
+                  mpirun  --npernode 1 \
+                    -np $NUM_NODES \
+                    --tag-output \
+                    --allow-run-as-root \
+                    --prefix $MPI_ROOT \
+                    -x MODEL_PATH \
+                    -x SYNAPSE_AI_VER \
+                    -x RUN_PATH \
+                    $RUN_PATH/setup.sh;
+
+                  $RUN_PATH/run_bert_1.5b.sh;
+
+
+    Worker:
+      replicas: 2
+      template:
+        spec:
+          serviceAccountName: yourusername
+          volumes:
+            - name: mydir
+              hostPath:
+                path: /home/yourusername/models/voyager/bert_deepspeed/1.15.1
+                type: Directory
+            - name: scratch
+              emptyDir: {}
+              #- name: output
+              #hostPath:
+              #  path: /voyager/ceph/users/yourusername/results/llama/1.13
+              #  type: Directory
+            - name: dataset
+              hostPath:
+                path: /voyager/ceph/users/yourusername/datasets/bert/pytorch
+                type: Directory
+          hostIPC: true
+          containers:
+            - image: vault.habana.ai/gaudi-docker/1.15.1/ubuntu22.04/habanalabs/pytorch-installer-2.2.0:latest
+              name: bert-worker
+              imagePullPolicy: Always
+              resources:
+                limits:
+                  habana.ai/gaudi: 8
+                  cpu: 95
+                  memory: 409Gi
+                  hugepages-2Mi: 95000Mi
+                requests:
+                  habana.ai/gaudi: 8
+                  cpu: 95
+                  memory: 409Gi
+                  hugepages-2Mi: 95000Mi
+              volumeMounts:
+                - name: mydir
+                  mountPath: /mydir
+                - name: scratch
+                  mountPath: /scratch
+                  #- name: output
+                  #mountPath: /output
+                - name: dataset
+                  mountPath: /dataset
+ 

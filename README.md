@@ -31,13 +31,14 @@ The list of models is being improved. Your feedback is greatly appreciated. Feel
 
 
 ## Natural Language processing
-| Models                                                                         | Framework  | Multi-node  | Verified |
-| ------------------------------------------------------------------------------ | ---------- | ----------- | -------- |
-| [BERT](PyTorch/nlp/bert)                                                       | Pytorch    |  Yes        |   1.15.1 |
-| [BART (fine-tuning,simpletransformers)](PyTorch/nlp/BART)                      | Pytorch    |  Yes        |   1.15.1 |
-| [Hugginface BLOOM (inference)](PyTorch/nlp/bloom)                              | Pytorch    |             |   1.15.1 |
-| [LLaMA (Megatron-DeepSpeed)](PyTorch/nlp/DeepSpeedExamples/Megatron-DeepSpeed) | Pytorch    |  Yes        |   1.13   |
-| [BERT](TensorFlow/nlp/bert)                                                    | TensorFlow |             |   1.13   |
+| Models                                                                          | Framework  | Multi-node  | Verified |
+| ------------------------------------------------------------------------------- | ---------- | ----------- | -------- |
+| [BERT](PyTorch/nlp/bert)                                                        | Pytorch    |  Yes        |   1.15.1 |
+| [BART (fine-tuning,simpletransformers)](PyTorch/nlp/BART)                       | Pytorch    |  Yes        |   1.15.1 |
+| [Hugginface BLOOM (inference)](PyTorch/nlp/bloom)                               | Pytorch    |             |   1.15.1 |
+| [BERT 1.5B and 5B with Deepspeed](PyTorch/nlp/DeepSpeedExamples/deepspeed-bert) | Pytorch    |  Yes        |   1.15.1 |
+| [LLaMA (Megatron-DeepSpeed)](PyTorch/nlp/DeepSpeedExamples/Megatron-DeepSpeed)  | Pytorch    |  Yes        |   1.13   |
+| [BERT](TensorFlow/nlp/bert)                                                     | TensorFlow |             |   1.13   |
 
 ## Generative models
 | Models                                                                                           | Framework  | Multi-node | Verified |
