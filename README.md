@@ -9,9 +9,10 @@ The list of models is being improved. Your feedback is greatly appreciated. Feel
 
 ## Simple examples
 - ['Hello World!'](helloworld): simplest example to run on Voyager.
-- [Port your Pytorch application](/PyTorch/examples/port_mnist). An example of a CNN model ported to Intel Gaudi HPU card.
+- [Port your Pytorch application](PyTorch/examples/port_mnist). An example of a CNN model ported to Intel Gaudi HPU card.
 - [MPIJob TF](TensorFlow/examples/MPIJob) Learn how to run a MNIST Tensorflow model in multiple HPUs. 
 - [MPIJob PT](PyTorch/examples/MPIJob/) Learn how to run a MNIST Pytorch model in multiple HPUs.
+- [Parallelize your application with DDP](PyTorch/examples/ddp). Tutorial to parallelize a working Pytorch app.
 - [Tutorial: Huggingface Diffusers](PyTorch/examples/huggingface/diffusers) Learn ho to run Stable Diffusion Inference on HPUs.
 
 ## Computer Vision
