@@ -42,25 +42,27 @@ mpirun -np ${N_CARDS} \
   -x MASTER_PORT=$MASTER_PORT \
   $CMD;
 ```
-The `NUM_NODES` is the number of nodes used and must match the `Workers` in the MPIJob. It is used to calculate the total number of Gaudi cards to be used (8 per node). The `MASTER_ADDR` and `MASTER_PORT` are defined and later passed to the mpirun. no need for users to modify them.
+The `NUM_NODES` is the number of nodes used and must match the `Workers` in the MPIJob. It is used to calculate the total number of Gaudi cards to be used (8 per node). The `MASTER_ADDR` and `MASTER_PORT` are defined and later passed to the mpirun. No need for users to modify them.
 The `CMD` contains the command we want to execute which in this case is this pytorch application. Note that here you can pass arguments to the model.
 
 Finally, the `mpirun` command will execute the `$CMD` using MPI.
 
 ## Parallelazing the Pytorch application
-We describe the example from `mnist_multicard.py` to show how to parallelize a working Pytorch application using DDP. Note that this is the same model used in [how to port your app to Voyager](/PyTorch/examples/port_mnist) section but now we run it on multiple cards. Mosto of the code will remain the same (model architecture, training and testin functions) and only the `main` part needs some modifications. You can use `vimdiff` or similar to highlight the differences.
+We describe the example from `mnist_multicard.py` to show how to parallelize a working Pytorch application using DDP. Note that this is the same model used in [how to port your app to Voyager](/PyTorch/examples/port_mnist) section but now we run it on multiple cards. Most of the code will remain the same (model architecture, training and testing functions...) and only the `main` function needs some modifications. You can use `vimdiff` or similar to highlight the differences.
 
 **Import packages**
+
 First, some packages need to be added:
 ```python
 import habana_frameworks.torch.distributed.hccl
 from habana_frameworks.torch.distributed.hccl import initialize_dist
 import torch.distributed as dist
 ```
-The `torch.distributed` is Pytorch Distributed communication package to run parallel jobs. It contains the `Distributed Data-Parallel (DDP)` module that allows to run the distribute the data to accelrate training.
+The `torch.distributed` is Pytorch Distributed communication package to run parallel jobs. It contains the `Distributed Data-Parallel (DDP)` module that allows to distribute the data amonf different HPUs to accelrate training.
 `HCCL` is the Intel Habana's package that emulates NVIDIA Collective Communication Library (NCCL). That is the backend in this parallelization.
 
 **Initialization**
+
 Then, in the `main` function, we need to add the following at the beginning:
 ```python
 world_size, rank, local_rank = initialize_distributed_hpu()
@@ -75,7 +77,8 @@ dist.init_process_group(
 The `initialize_distributed_hpu()` will return world_size(total number of cards), rank (worker ID in world), local_rank (worker ID in the node). Then the `dist.init_process_group` will initialize the parallel process.
 
 **Data download**
-Only one worker should download the data. (Note that now is downloaded in to your `/mydir` folder). So:
+
+Only one worker should download the data. (Note that now, data is downloaded in to your `/mydir` folder). So:
 ```python
 download = True if local_rank == 0 else False
 if rank == 0:
@@ -92,7 +95,8 @@ if rank != 0:
                                               transforms.Compose([transforms.ToTensor()]))   
 ```
 **Data distribution**
-Before loading the data into the `Dataloader`, it needs to be distributed among the different workers using the `DistributedSampler` class. So train and test data need have their own sampler as: 
+
+Before loading the data into the `Dataloader`, it needs to be distributed among the different workers using the `DistributedSampler` class. So train and test data need their own sampler as: 
 
 ```python
 train_sampler = torch.utils.data.distributed.DistributedSampler(
@@ -116,14 +120,16 @@ test_loader = torch.utils.data.DataLoader(test_set,
 ```
 
 **Create model**
-Create the model and implement distributed data parallelism on it.
+
+Create the model in the HPUs and implement distributed data parallelism on it.
 ```python
 model=WideResNet(num_classes).to(device)
 model = nn.parallel.DistributedDataParallel(model)
 ```
 
 **Gather output data from different workers**
-In the main loop, some commands need to be added. First, for each epoch, the sampler needs to be shuffled.Then, a reduce operation us used to obtain the total `image_per_second` value. Finally, to track validation accuracy and loss, we need to call an `all_reduce` operation to calculate them.
+
+In the main loop, some commands need to be added. First, for each epoch, the sampler needs to be shuffled. Then, a reduction operation is used to obtain the total `image_per_second` value. Finally, to track validation accuracy and loss, we need to call an `all_reduce` operation to calculate them as well.
 ```python
 for epoch in range(args.epochs):
 
