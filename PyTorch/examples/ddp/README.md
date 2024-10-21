@@ -55,7 +55,7 @@ We describe the example from `mnist_multicard.py` to show how to parallelize a w
 First, some packages need to be added:
 ```python
 import habana_frameworks.torch.distributed.hccl
-from habana_frameworks.torch.distributed.hccl import initialize_dist
+from habana_frameworks.torch.distributed.hccl import initialize_distributed_hpu
 import torch.distributed as dist
 ```
 The `torch.distributed` is Pytorch Distributed communication package to run parallel jobs. It contains the `Distributed Data-Parallel (DDP)` module that allows to distribute the data amonf different HPUs to accelrate training.
