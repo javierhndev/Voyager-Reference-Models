@@ -17,7 +17,7 @@ The main structure of the code is:
 - Test function
 - "Main" function
 
-The first steps into porting to HPU is ton include the Intel HPU libraries
+The first steps into porting to HPU is to include the Intel HPU libraries
 ```python
 import habana_frameworks.torch.core as htcore
 ```

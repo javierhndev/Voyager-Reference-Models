@@ -48,12 +48,12 @@ If the 9888 port is used by someone else, you can change it to a different numbe
 ### 4) Set the ssh tunnel
 Now, from you pc, you can create an ssh tunnel with the following command:
 ```bash
-ssh -N -f -L 9888:localhost:8888 login.voyager.sdsc.edu
+ssh -N -f -L 8888:localhost:9888 login.voyager.sdsc.edu
 ``` 
 
 ### 5) Copy the link to your browser
 
-Now, get one of the URL from step 2 and copy it to your folder. Jupyter Notebook should work in your browser!
+Now, get one of the URL from step 2 and copy it to your browser. Jupyter Notebook should work in your browser!
 
 To verify everything is working. Open a notebook and run the following command:
 ```bash
