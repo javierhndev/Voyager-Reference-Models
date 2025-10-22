@@ -1,26 +1,25 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: jupyter-notebook-pod
+  name: mnist
   namespace: yournamespace
 spec:
   restartPolicy: Never
   volumes:
     - name: scratch
       emptyDir: {}
-    - name: workdir
+    - name: mydir
       hostPath:
-        path: /home/yourusername/notebooks
+        path: /home/yourfolder
         type: Directory
-  hostIPC: true
   containers:
     - name: gaudi-container
       image: vault.habana.ai/gaudi-docker/1.21.4/ubuntu22.04/habanalabs/pytorch-installer-2.6.0:latest
       volumeMounts:
         - mountPath: /scratch
           name: scratch
-        - mountPath: /workdir
-          name: workdir
+        - mountPath: /mydir
+          name: mydir 
       resources:
         limits:
           memory: 32G
@@ -34,8 +33,9 @@ spec:
           hugepages-2Mi: 30000Mi
       command: ["/bin/sh","-c"]
       args:
-        - >-
-           pip install jupyter;
-           jupyter notebook --allow-root;
- 
+        - hl-smi;
+          cd /mydir;
+          python mnist_onecard.py --epochs 20 --target-accuracy 0.90;
+
+         
 

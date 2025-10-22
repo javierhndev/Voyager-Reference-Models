@@ -9,6 +9,7 @@ The list of models is being improved. Your feedback is greatly appreciated. Feel
 
 ## Simple examples
 - ['Hello World!'](helloworld): simplest example to run on Voyager.
+- [Port your Pytorch application](PyTorch/examples/port_mnist). A porting based on the Lazy mode.
 - [(OLD) Port your Pytorch application](PyTorch/examples/old_port_mnist). A porting based on the Lazy mode.
 - [Running Jupyter Notebook](PyTorch/examples/jupyter-notebooks). A tutorial on running Jupyter Notebook on Voyager.
 - [MPIJob TF](TensorFlow/examples/MPIJob) Learn how to run a MNIST Tensorflow model in multiple HPUs. 

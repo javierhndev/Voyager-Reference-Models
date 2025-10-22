@@ -20,7 +20,7 @@ kubectl create -f jupyter_pod.yaml
 ### 2) Get the link to the Jupyter Notebook
 You can check the pod status with `kubectl get pods`. After a few seconds Jupyter notebook should be installed and ready. Type:
 ```bash
-kubectl logs thepodname
+kubectl logs thepodname -n yournamespace
 ```
 
 and at the end of the log, you should see the links you will use shortly. You should see something similar to this:
@@ -41,7 +41,7 @@ These are the links you will need later to run Jupyter Notebook from your pc. Be
 ### 3) Port forward
 You need to port-forward your pod. Using for example the following kubectl command in Voyager:
 ```bash
-kubectl port-forward jupyter-notebook-pod 9888:8888
+kubectl port-forward jupyter-notebook-pod 9888:8888 -n yournamespace
 ``` 
 If the 9888 port is used by someone else, you can change it to a different number.
 
@@ -66,7 +66,7 @@ It should give the information of the Gaudi card you are running on.
 
 Once you have finished your session with Jupyter Notebook, don't forget to delete the pod with
 ```bash
-kubectl delete pod nameofpod
+kubectl delete pod nameofpod -n yournamespace
 ```
 
 If not, the pod will keep running indefinitely, even if the Jupter Notebook is closed, and you may be charged for that extra time.
