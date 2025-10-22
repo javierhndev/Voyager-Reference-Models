@@ -1,20 +1,20 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: helloworld
+  name: test
+  namespace: yourusername
 spec:
-   restartPolicy: Never
-   containers:
-     - name: gaudi-container
-       image: vault.habana.ai/gaudi-docker/1.15.1/ubuntu22.04/habanalabs/pytorch-installer-2.2.0:latest
-       resources:
-         limits:
-           memory: 1G
-           cpu: 1
-           habana.ai/gaudi: 1
-         requests:
-           memory: 1G
-           cpu: 1
-           habana.ai/gaudi: 1
-       command: ["/bin/sh","-c"]
-       args: ["echo Hello World!"]
+  restartPolicy: Never
+  containers:
+    - name: gaudi-container
+      image: vault.habana.ai/gaudi-docker/1.21.4/ubuntu22.04/habanalabs/pytorch-installer-2.6.0:latest
+      resources:
+        limits:
+          memory: 32G
+          cpu: 12
+          habana.ai/gaudi: 1
+      command: ["/bin/sh","-c"]
+      args:
+        - echo 'Hello World!';
+         
+

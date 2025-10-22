@@ -20,7 +20,7 @@ import torchvision
 import torchvision.transforms as transforms
 from torch.utils.data import Dataset, DataLoader
 
-import habana_frameworks.torch.core as htcore
+import habana_frameworks.torch.core as htcore  #<------ Import Intel Gaudi framework
 
 # Parse input arguments
 parser = argparse.ArgumentParser(description='Fashion MNIST Example',
@@ -131,11 +131,11 @@ def train(model, optimizer, train_loader, loss_fn, device):
         
         # Backward pass
         loss.backward()
-        htcore.mark_step()
+        htcore.mark_step() # <--------- Add mark_step() here!!!
         
         # Updating model parameters
         optimizer.step()
-        htcore.mark_step()
+        htcore.mark_step()  # <--------- Add mark_step() here!!!
 
 def test(model, test_loader, loss_fn, device):
     total_labels = 0
@@ -151,7 +151,7 @@ def test(model, test_loader, loss_fn, device):
             # Forward pass 
             outputs = model(images)
             loss = loss_fn(outputs, labels)
-            htcore.mark_step()
+            htcore.mark_step()  # <-------- Add mark_step() here!!!
 
             # Extracting predicted label, and computing validation loss and validation accuracy
             predictions = torch.max(outputs, 1)[1]
@@ -172,8 +172,8 @@ if __name__ == '__main__':
                                                transforms.Compose([transforms.ToTensor()]))  
 
     #optional to speedup: Train only on 1/6 of the dataset
-    train_subset = train_set #torch.utils.data.Subset(train_set, list(range(0, 10000)))
-    test_subset = test_set #torch.utils.data.Subset(test_set, list(range(0, 10000)))
+    train_subset = torch.utils.data.Subset(train_set, list(range(0, 10000)))
+    test_subset = torch.utils.data.Subset(test_set, list(range(0, 10000)))
     
     # Training data loader
     train_loader = torch.utils.data.DataLoader(train_subset, 
@@ -186,7 +186,7 @@ if __name__ == '__main__':
     num_classes = 10
 
     ##device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    device = torch.device('hpu')
+    device = torch.device('hpu')  # <------- Set the device to HPU (Intel Gaudi card)
 
     model = WideResNet(num_classes).to(device)
 

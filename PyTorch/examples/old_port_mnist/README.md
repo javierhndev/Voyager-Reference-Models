@@ -1,5 +1,8 @@
-# Porting your Pytorch application to Voyager
-In this section we discuss how to port a Pytorch application (that has been running on GPUs) to Voyager and its Intel Gaudi (HPU) cards.
+# Porting your Pytorch application to Voyager using Lazy mode
+
+**NOTE**: This (Lazy mode) was the default way to port a Pytorch application in earlier versions of SynapseAI. You should try first to port your AI application using the default mode (Eager mode) before trying this. However, the lazy mode is the recommended porting method for Diffusion models or other models having issues with `torch.compile`.
+
+In this section we discuss how to port a Pytorch application (that has been running on GPUs) to Voyager and its Intel Gaudi (HPU) cards using the Lazy mode.
 
 ## Overview
 The code in this section runs a Pytoch application on a single Gaudi card. It runs a Wide Resnet model to classify the different classes from the [Fashion MNIST dataset](https://github.com/zalandoresearch/fashion-mnist). This Resnet model just serves as an example and could actually be substituted by many other CNN architectures. Parts of this Python script is based on the ones from the [Nvidia Deep Learning Institute](https://www.nvidia.com/en-us/training/).
@@ -82,7 +85,14 @@ def test(model, test_loader, loss_fn, device):
 ```
 
 ## Running the application
-Now that the python code is ready you can use the `mnist_1card.yaml` to launch a pod to run it. You are going to need to redefine the `/mydir` folder to the folder where you have the application. As usual, you can launch it with
+Now that the python code is ready you can use the `mnist_1card.yaml` to launch a pod to run it. You are going to need to redefine the `/mydir` folder to the folder where you have the application.
+
+And, to execute the model in Lazy mode you need pass the following flag:
+```bash
+export HPU_LAZY_MODE = 1
+```
+
+ Then, you can launch it with
 ```bash
 kubectl create -f mnist_1card.yaml
 ```
