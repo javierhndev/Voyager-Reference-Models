@@ -8,7 +8,7 @@ pipeline = GaudiStableDiffusionXLPipeline.from_pretrained(
     model_name,
     scheduler=scheduler,
     use_habana=True,
-    use_hpu_graphs=True,
+    #use_hpu_graphs=True,
     gaudi_config="Habana/stable-diffusion",
 )
 

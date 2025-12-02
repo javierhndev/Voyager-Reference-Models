@@ -18,14 +18,14 @@ spec:
           volumes:
             - name: mydir
               hostPath:
-                path: /home/yourusername/models/ddp_mnist/1.15.1
+                path: /home/yourusername/models/ddp_mnist/1.21.4
                 type: Directory
             - name: scratch
               emptyDir: {}
           hostIPC: true
           containers:
-            - image: vault.habana.ai/gaudi-docker/1.15.1/ubuntu22.04/habanalabs/pytorch-installer-2.2.0:latest
-              name: bert-launcher
+            - image: vault.habana.ai/gaudi-docker/1.21.4/ubuntu22.04/habanalabs/pytorch-installer-2.6.0:latest
+              name: test-launcher
               resources:
                 requests:
                   cpu: 2
@@ -41,6 +41,8 @@ spec:
               command: ["/bin/bash", "-c"]
               args:
                 - >-
+                  /usr/bin/ssh-keygen -A;
+                  /usr/sbin/sshd;
                   declare -xr NUM_NODES=2;
                   declare -xr NGPU_PER_NODE=8;
                   declare -xr N_CARDS=$((NUM_NODES*NGPU_PER_NODE));
@@ -70,9 +72,10 @@ spec:
                     --merge-stderr-to-stdout --prefix $MPI_ROOT \
                     -x MASTER_ADDR=$MASTER_ADDR \
                     -x MASTER_PORT=$MASTER_PORT \
+                    -x PT_HPU_LAZY_MODE=1 \
                     $CMD;
 
-                  sleep 3000;
+                  sleep 300;
 
     Worker:
       replicas: 2
@@ -82,29 +85,35 @@ spec:
           volumes:
             - name: mydir
               hostPath:
-                path: /home/yourusername/models/ddp_mnist/1.15.1
+                path: /home/yourusername/models/ddp_mnist/1.21.4
                 type: Directory
             - name: scratch
               emptyDir: {}
           hostIPC: true
           containers:
-            - image: vault.habana.ai/gaudi-docker/1.15.1/ubuntu22.04/habanalabs/pytorch-installer-2.2.0:latest
-              name: ddp-worker
+            - image: vault.habana.ai/gaudi-docker/1.21.4/ubuntu22.04/habanalabs/pytorch-installer-2.6.0:latest
+              name: test-worker
               imagePullPolicy: Always
               resources:
                 limits:
                   habana.ai/gaudi: 8
-                  cpu: 95
+                  cpu: 94
                   memory: 409Gi
-                  hugepages-2Mi: 95000Mi
+                  hugepages-2Mi: 30000Mi
                 requests:
                   habana.ai/gaudi: 8
-                  cpu: 95
+                  cpu: 94
                   memory: 409Gi
-                  hugepages-2Mi: 95000Mi
+                  hugepages-2Mi: 30000Mi
               volumeMounts:
                 - name: mydir
                   mountPath: /mydir
                 - name: scratch
                   mountPath: /scratch
-
+              command: ["/bin/bash", "-c"]
+              args:
+                - >-
+                   /usr/bin/ssh-keygen -A;
+                   /usr/sbin/sshd;
+                   sleep 365d;
+ 

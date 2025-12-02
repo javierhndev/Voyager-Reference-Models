@@ -9,7 +9,9 @@ The parallelization is done using Pytorch's [DDP](https://pytorch.org/tutorials/
 We provide also two yaml files to launch the appplication on one (8 cards) and two (16 cards) nodes.
 
 ## YAML files
-You can use  `mnist_8cards.yaml` or `mnist_16cards.yaml` to run the model on one or two nodes respectively. Note that the `mydir` volume needs to be redefined to the location of the scripts.
+You can use `mnist_8cards.yaml` or `mnist_16cards.yaml` to run the model on one or two nodes respectively. The `8 cards` runs on single pod while the `16 cards` uses the `MPIJob` object to run in two nodes.
+
+Note that the `mydir` volume needs to be redefined to the location of the scripts.
 
 These yamls files will launch an MPIJob which is the default way to run MPI on Voyager. Then, the following commands will be executed:
 ```bash

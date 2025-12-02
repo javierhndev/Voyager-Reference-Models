@@ -1,3 +1,5 @@
+#(DEPRECATED)
+
 # MPIJobs in Voyager
 This section describes how to run an application in multiple HPUs on Voyager.
 

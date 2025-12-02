@@ -2,7 +2,7 @@ apiVersion: kubeflow.org/v2beta1
 kind: MPIJob
 metadata:
   name: yourusername-test-16cards
-  namespace: yourusername-restricted
+  namespace: yourallocation
 spec:
   slotsPerWorker: 8
   runPolicy:
@@ -24,7 +24,7 @@ spec:
               emptyDir: {}
           hostIPC: true
           containers:
-            - image: vault.habana.ai/gaudi-docker/1.15.1/ubuntu22.04/habanalabs/pytorch-installer-2.2.0:latest
+            - image: vault.habana.ai/gaudi-docker/1.21.4/ubuntu22.04/habanalabs/pytorch-installer-2.6.0:latest
               name: test-launcher
               resources:
                 requests:
@@ -41,11 +41,13 @@ spec:
               command: ["/bin/bash", "-c"]
               args:
                 - >-
+                  /usr/bin/ssh-keygen -A;
+                  /usr/sbin/sshd;
                   declare -xr NUM_NODES=2;
                   declare -xr NGPU_PER_NODE=8;
                   declare -xr N_CARDS=$((NUM_NODES*NGPU_PER_NODE));
 
-                  declare -xr SYNAPSE_AI_VER=1.15.1;
+                  declare -xr SYNAPSE_AI_VER=1.21.0;
                   declare -xr RUN_PATH=/mydir;
 
                   declare -xr MODEL_PATH=/scratch/Model-References/PyTorch/examples/computer_vision/hello_world   ;
@@ -73,7 +75,7 @@ spec:
                                    --epochs=1 \
                                    --lr=1.0 \
                                    --gamma=0.7 \
-                                   --hpu
+                                   --hpu \
                                    --autocast";
 
                   mpirun -np ${N_CARDS} \
@@ -104,23 +106,29 @@ spec:
               emptyDir: {}
           hostIPC: true
           containers:
-            - image: vault.habana.ai/gaudi-docker/1.15.1/ubuntu22.04/habanalabs/pytorch-installer-2.2.0:latest
+            - image: vault.habana.ai/gaudi-docker/1.21.4/ubuntu22.04/habanalabs/pytorch-installer-2.6.0:latest
               name: test-worker
               imagePullPolicy: Always
               resources:
                 limits:
                   habana.ai/gaudi: 8
-                  cpu: 95
+                  cpu: 94
                   memory: 409Gi
-                  hugepages-2Mi: 95000Mi
+                  hugepages-2Mi: 30000Mi
                 requests:
                   habana.ai/gaudi: 8
-                  cpu: 95
+                  cpu: 94
                   memory: 409Gi
-                  hugepages-2Mi: 95000Mi
+                  hugepages-2Mi: 30000Mi
               volumeMounts:
                 - name: mydir
                   mountPath: /mydir
                 - name: scratch
                   mountPath: /scratch
+              command: ["/bin/bash", "-c"]
+              args:
+                - >-
+                   /usr/bin/ssh-keygen -A;
+                   /usr/sbin/sshd;
+                   sleep 365d;
  

@@ -7,7 +7,7 @@ Here we show how to run HuggingFace difffusers on Voyager using [optimum-habana]
 
 [Optimum-habana](https://github.com/huggingface/optimum-habana/tree/main) is the interface between Huggingface Diffusers (and Transformers) and the Intel Gaudi accelerator (HPU).
 
-This tutorial uses synapse AI 1.15.1 and optimum-habana 1.13.1
+This tutorial uses synapse AI 1.21.4 and optimum-habana 1.18.1
 
 ## Dataset
 
@@ -37,7 +37,6 @@ pipeline = GaudiStableDiffusionXLPipeline.from_pretrained(
     model_name,
     scheduler=scheduler,
     use_habana=True,
-    use_hpu_graphs=True,
     gaudi_config="Habana/stable-diffusion",
 )
 

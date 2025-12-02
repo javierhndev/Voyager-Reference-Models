@@ -3,9 +3,13 @@ This section describes how to run an application in multiple HPUs on Voyager wit
 
 As an example, we are runing the MNIST model supported by [Habana](https://github.com/HabanaAI/Model-References/tree/1.13.0/PyTorch/examples/computer_vision/hello_world).
 
+The example shows how to use MPIJobs for multinode runs. If interested in running in a single node (8 or less cards), use a simple pod with the `mpirun` command'.
+
+In this tutorial we are running in *Lazy* mode (not the default) due to compatibility with Intel's code.
+
 ## Overview
 
-Voyager has 42 nodes and each node contains 8 HPUs. To run multi-cards applications we can use the `MPIJob` object in Kubernetes. This will allow us to do an `mpirun` and run in one or multiple Voyager's nodes.
+Voyager has 42 nodes and each node contains 8 HPUs. To run multinode applications we can use the `MPIJob` object in Kubernetes. This will allow us to do an `mpirun` and run in one or multiple Voyager's nodes.
 
 The application in this example is the MNIST model, ported by [Habana](https://github.com/HabanaAI/Model-References/tree/1.13.0/PyTorch/examples/computer_vision/hello_world) and based on the [Pytorch example](https://github.com/pytorch/examples/tree/master/mnist).
 
@@ -69,6 +73,8 @@ mpirun -np ${N_CARDS} \
   -x PT_HPU_LAZY_MODE=1 \
   $CMD;
 ```
+Note that `-x PT_HPU_LAZY_MODE=1` has been added to activate the Lazy mode (otherwise the default mode in Intel Gaudi cards is Eager).
+
 The `setup.sh` in this example is quite simple and only clone Habana's repository to `/scratch`. It executes the following:
 ```bash
 #!/bin/sh
