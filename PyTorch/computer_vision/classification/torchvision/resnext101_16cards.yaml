@@ -1,7 +1,7 @@
 apiVersion: kubeflow.org/v2beta1
 kind: MPIJob
 metadata:
-  name: yourusername-resnext-8cards
+  name: resnext101-16cards
   namespace: yourusername-restricted
 spec:
   slotsPerWorker: 8
@@ -32,8 +32,8 @@ spec:
                 type: Directory
           hostIPC: true
           containers:
-            - image: vault.habana.ai/gaudi-docker/1.15.1/ubuntu22.04/habanalabs/pytorch-installer-2.2.0:latest
-              name: resnext-launcher
+            - image: vault.habana.ai/gaudi-docker/1.21.4/ubuntu22.04/habanalabs/pytorch-installer-2.6.0:latest
+              name: resnet-launcher
               resources:
                 requests:
                   cpu: 2
@@ -51,20 +51,22 @@ spec:
                 - name: output
                   mountPath: /output
                   #env:
-                      #- name: dataset
-                      #value: "/ceph/datasets/imagenet/ILSVRC2012"
-                      #- name: output
-                      #value: "/ceph/results/resnet/resnext101/8cards"
+                  #- name: dataset
+                  #value: "/ceph/datasets/imagenet/ILSVRC2012"
+                  #- name: output
+                  #value: "/ceph/results/resnet/resnet50/8cards"
               command: ["/bin/bash", "-c"]
               args:
                 - >-
-                  declare -xr NUM_NODES=1;
+                  /usr/bin/ssh-keygen -A;
+                  /usr/sbin/sshd;
+                  declare -xr NUM_NODES=2;
                   declare -xr NGPU_PER_NODE=8;
                   declare -xr N_CARDS=$((NUM_NODES*NGPU_PER_NODE));
 
-                  declare -xr SYNAPSE_AI_VER=1.15.1;
+                  declare -xr SYNAPSE_AI_VER=1.21.0;
 
-                  declare -xr RUN_PATH=/home/models/voyager/resnet/1.15.1/8cards;
+                  declare -xr RUN_PATH=/home/models/voyager/resnet/1.21;
                   declare -xr MODEL_PATH=/scratch/Model-References/PyTorch/computer_vision/classification/torchvision;
 
                   declare -xr PYTHONPATH=$PYTHONPATH:/scratch/Model-References;
@@ -76,7 +78,7 @@ spec:
                   echo $MASTER_ADDR;
                   echo $MASTER_PORT;
 
-                  sleep 20s;
+                  sleep 15s;
 
                   mpirun  --npernode 1 \
                     --tag-output \
@@ -87,19 +89,19 @@ spec:
                     $RUN_PATH/setup.sh;
 
                   declare -xr CMD="python3 $MODEL_PATH/train.py \
-                                   --data-path=/dataset \
-                                   --model=resnext101_32x4d \
-                                   --device=hpu \
-                                   --batch-size=256 \
-                                   --epochs=1 \
-                                   --print-freq=20 \
-                                   --output-dir=/output \
-                                   --seed=123 \
-                                   --autocast \
-                                   --deterministic \
-                                   --save-checkpoint \
-                                   --dl-time-exclude=False \
-                                   --dl-worker-type=HABANA";
+                                   --batch-size 256 \
+                                   --model resnext101_32x4d \
+                                   --device hpu \
+                                   --print-freq 20 \
+                                   --dl-worker-type="HABANA" \
+                                   --dl-time-exclude False \
+                                   --deterministic
+                                   --workers 8 \
+                                   --data-path /dataset \
+                                   --output-dir /output \
+                                   --epochs 4 \
+                                   --autocast  \
+                                   --run-lazy-mode=False --use_torch_compile";
 
                   mpirun -np ${N_CARDS} \
                     --allow-run-as-root \
@@ -113,8 +115,10 @@ spec:
                     -x PYTHONPATH \
                     $CMD;
 
+                  sleep 500s;
+
     Worker:
-      replicas: 1
+      replicas: 2
       template:
         spec:
           serviceAccountName: yourusername
@@ -135,20 +139,20 @@ spec:
                 type: Directory
           hostIPC: true
           containers:
-            - image: vault.habana.ai/gaudi-docker/1.15.1/ubuntu22.04/habanalabs/pytorch-installer-2.2.0:latest
-              name: resnext-worker
+            - image: vault.habana.ai/gaudi-docker/1.21.4/ubuntu22.04/habanalabs/pytorch-installer-2.6.0:latest
+              name: resnet50-worker
               imagePullPolicy: Always
               resources:
                 limits:
                   habana.ai/gaudi: 8
                   cpu: 95
                   memory: 409Gi
-                  hugepages-2Mi: 95000Mi
+                  hugepages-2Mi: 30000Mi
                 requests:
                   habana.ai/gaudi: 8
                   cpu: 95
                   memory: 409Gi
-                  hugepages-2Mi: 95000Mi
+                  hugepages-2Mi: 30000Mi
               volumeMounts:
                 - name: mydir
                   mountPath: /home
@@ -158,4 +162,10 @@ spec:
                   mountPath: /dataset
                 - name: output
                   mountPath: /output
+              command: ["/bin/bash", "-c"]
+              args:
+                - >-
+                   /usr/bin/ssh-keygen -A;
+                   /usr/sbin/sshd;
+                   sleep 365d;
  

@@ -1,16 +1,12 @@
 # Computer vision classification with Pytorch
-Here we provide the yaml files and instructions to train ResNet50, ResNet152, ResNeXt101, MobbileNetV2 & GoogLeNet models on Voyager.
+Here we provide the yaml files and instructions to train ResNet50 and ResNeXt101 models on Voyager.
 
 ## Overview
 
-The models are supported by Intel Habana. More details can be found in their [repository](https://github.com/HabanaAI/Model-References/tree/master/PyTorch/computer_vision/classification/torchvision). This tutorial uses SynapseAI v1.15.1. The base model used here is actually from [GitHub: PyTorch-Vision](https://github.com/pytorch/vision/tree/release/0.10/torchvision/models) which has been modifed by Habana. The following models have been tested on Voyager:
+The models are supported by Intel Habana. More details can be found in their [repository](https://github.com/HabanaAI/Model-References/tree/master/PyTorch/computer_vision/classification/torchvision). This tutorial uses SynapseAI v1.21.4. The base model used here is actually from [GitHub: PyTorch-Vision](https://github.com/pytorch/vision/tree/release/0.10/torchvision/models) which has been modifed by Habana. The following models have been tested on Voyager:
 
 - ResNet50
-- ResNet152
 - ResNext101
-- MobileNetV2
-- GoogLeNet
-
 
 ## DATASET
 
@@ -38,13 +34,9 @@ Feel free to use it!
 ## TRAINING
 
 We are showing here some examples for each model. You can find more examples with differen parameters in [Habana's repository](https://github.com/HabanaAI/Model-References/tree/master/PyTorch/computer_vision/classification/torchvision)
-- To see the available training parameters for ResNet50, ResNet152, ResNeXt101 and MobileNetV2, run:
+- To see the available training parameters for ResNet50 and ResNeXt101, run:
   ```bash
   python3 -u train.py --help
-  ```
-- To see the available training parameters for GoogLeNet, run:
-  ```bash
-  python3 -u main.py --help
   ```
 
 All the yaml files here use two environment variables: `dataset` and `output`. Use them to point the location of the dataset and output folder (Use Ceph). Multi-card examples also define a path for a `RUN_PATH` (where the `.yaml` file and `setup.sh` are located).
@@ -61,57 +53,65 @@ to launch a pod to run the model. The code is dowloaded in to the scratch. The l
 
 Note each run takes ~3 hours to run 1 epoch in 1 HPU.
 
-- ResNet50 (lazy mode, BF16 mixed precision, batch Size 256, custom learning rate, Habana dataloader):
+- ResNet50 (lazy mode, BF16 mixed precision, batch Size 256, custom learning rate, Habana dataloader, Eager mode, torch compile):
   ```bash
   kubectl create -f resnet50_1card.yaml 
   ```
   which will execute the following:
   ```bash
-  python3 -u train.py --dl-worker-type HABANA --batch-size 256 --model resnet50 --device hpu --workers 8 --print-freq 20 --dl-time-exclude False --deterministic --data-path ${dataset} --output-dir ${output} --save-checkpoint --epochs 1 --autocast  --lr 0.1 --custom-lr-values 0.1 0.01 0.001 0.0001 --custom-lr-milestones 0 30 60 80 
+  python3 -u train.py --dl-worker-type HABANA --batch-size 256 --model resnet50 --device hpu --workers 8 --print-freq 20 --dl-time-exclude False --deterministic --data-path /dataset --output-dir /output --save-checkpoint --epochs 1 --autocast  --lr 0.1 --custom-lr-values 0.1 0.01 0.001 0.0001 --custom-lr-milestones 0 30 60 80 --run-lazy-mode=False --use_torch_compile 
   ```
-- ResNeXt101 (lazy mode, BF16 mixed precision, batch size 256, custom learning rate, Habana dataloader):
+- ResNeXt101 (lazy mode, BF16 mixed precision, batch size 256, custom learning rate, Habana dataloader, Eager mode, torch compile):
   ```bash
   kubectl create -f resnext101_1card.yaml 
   ```
-  which will execute the following:
-  ```bash
-  python3 -u train.py --dl-worker-type HABANA --batch-size 256 --model resnext101_32x4d --device hpu --workers 8 --print-freq 20 --dl-time-exclude False --deterministic --data-path ${dataset} --output-dir ${output} --save-checkpoint --epochs 1 --autocast --lr 0.1 --custom-lr-values 0.1 0.01 0.001 0.0001 --custom-lr-milestones 0 30 60 80
-  ```
-
-- ResNet152 (lazy mode, BF16 mixed precision, batch size 128, custom learning rate):
-  ```bash
-  kubectl create -f resnet152_1card.yaml
-  ```
-  which will execute the following:
-  ```bash
-  python3 -u train.py --dl-worker-type HABANA --batch-size 128 --model resnet152 --device hpu --workers 8 --print-freq 20 --dl-time-exclude False --deterministic --data-path ${dataset} --output-dir ${output} --save-checkpoint --epochs 1 --autocast --lr 0.1 --custom-lr-values 0.1 0.01 0.001 0.0001 --custom-lr-milestones 0 30 60 80
-  ```
-- MobileNetV2 (lazy mode, BF16 mixed precision, batch size 256, 1 HPU on a single server with default PyTorch dataloader):
-  ```bash
-  kubectl create -f mobilenetv2_1card.yaml
-  ```
-  which will execute the following:
-  ```bash
-  python3 -u train.py --batch-size 256 --model mobilenet_v2 --device hpu --print-freq 10 --deterministic --data-path ${dataset} --output-dir ${output} --save-checkpoint --epochs 1 --autocast --dl-time-exclude=False --lr 0.045 --wd 0.00004 --lr-step-size 1 --lr-gamma 0.98 --momentum 0.9 
-  ```
-- GoogLeNet (batch size 128, FP32 precision, lazy mode):
-  ```bash
-  kubectl create -f googlenet_1card.yaml
-  ```
-  which will execute the following:
-  ```bash
-  python3 -u main.py --batch-size 128 --data-path ${dataset} --device hpu --dl-worker-type HABANA --epochs 1 --lr 0.07 --enable-lazy --model googlenet --seed 123 --no-aux-logits --print-interval 20 --workers 8
-  ```
-
 
 **Run on 8 HPUs**
-To run the models in multiple cards on Voyager, we submit an MPIJob instead of a single pod. You can find the yaml files and the `setup.sh` in the `8cards` folder.
+To run the models in multiple cards on Voyager, we can use `mpirun` in a single pod. 
+
+The following commands are executed in this pod:
+
+```bash
+export PYTHONPATH=/scratch/Model-References:$PYTHONPATH;
+mkdir -p /scratch/tmp/;
+cd /scratch;
+export N_CARDS=8;
+git clone -b 1.21.0 https://github.com/HabanaAI/Model-References;
+cd Model-References/PyTorch/computer_vision/classification/torchvision;
+pip install -r requirements.txt;
+export CMD="python3 train.py \
+              #model parameters";
+
+mpirun -n ${N_CARDS} \
+       --allow-run-as-root \
+       --bind-to core \
+       --map-by ppr:4:socket:PE=6 \
+       -rank-by core --report-bindings \
+       --tag-output \
+       --merge-stderr-to-stdout \
+       -x PYTHONPATH \
+       $CMD;
+```
+
+
+- ResNet50 (lazy mode, BF16 mixed precision, batch size 256, custom learning rate, 8 HPUs, Eager mode, torch compile): 
+  ```bash
+  kubectl create -f resnet50_8cards.yaml
+  ``` 
+- ResNeXt101 (lazy mode, BF16 mixed precision, batch size 256, 8 HPUs, uses habana_dataloader, Eager mode, torch compile)
+  ```bash
+  kubectl create -f resnext101_8cards.yaml
+  ```
+
+**Run on 16 or more HPUs**
+
+To run the models in multiple cards on Voyager, we submit an MPIJob instead of a single pod. We are providing as an example the ResNext101 model on 16. To run in more than two nodes change the values in `NUM_NODES` and `Replicas` (in workers) in the yaml file.
 
 The following commands are executed in the MPIJob:
 
 ```bash
 declare -xr HOME='/scratch/tmp';
-declare -xr NUM_NODES=1;
+declare -xr NUM_NODES=2;
 declare -xr NGPU_PER_NODE=8;
 declare -xr N_CARDS=$((NUM_NODES*NGPU_PER_NODE));
 
@@ -152,28 +152,6 @@ mpirun -np ${N_CARDS} \
   $CMD;
 ```
 
-You need to define the `RUN_PATH` variable and set it to the folder where you have the yaml and setup.sh files. Note that the setup.sh will copy [Habana's repository](https://github.com/HabanaAI/Model-References) to scratch (no need to do it yourself).
-
-- ResNet50 (lazy mode, BF16 mixed precision, batch size 256, custom learning rate, 8 HPUs): 
-  ```bash
-  kubectl create -f resnet50_8cards.yaml
-  ``` 
-- ResNeXt101 (lazy mode, BF16 mixed precision, batch size 256, 8 HPUs, uses habana_dataloader)
-  ```bash
-  kubectl create -f resnext101_8cards.yaml
-  ```
-- MobileNetV2 (lazy mode, BF16 mixed precision, batch size 256, 8 HPUs, use habana_dataloader, 8 workers)
-  ```bash
-  kubectl create -f mobilenetv2_8cards.yaml
-  ```
-- GoogLeNet (batch size 256, BF16 precision, lazy mode, 8 HPUs, uses habana_dataloader, 8 workers)
-  ```bash
-  kubectl create -f googlenet_8cards.yaml 
-  ```
-
-**Run on 16 or 32 HPUs**
-
-Running on multiple nodes (16 or more HPUs) is relatively easy and only a few modifications to the `8cards` files are needed. We are providing as an example the ResNet50 model on 16 and 32 cards. You can find them in the `16cards` and `32cards` folders. The main change is that the values in `NUM_NODES` and `Replicas` (in workers) in the yaml file need to be replaced by the actual value of nodes used.
 
 ### Profiling
 

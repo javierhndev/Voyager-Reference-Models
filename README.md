@@ -19,10 +19,8 @@ The list of models is being improved. Your feedback is greatly appreciated. Feel
 ## Computer Vision
 | Models                                                                                  | Framework         | Multi-node | Verified |
 | --------------------------------------------------------------------------------------- | ----------------- | ---------- | -------- |
-| [ResNet50, ResNet152, ResNeXt101](PyTorch/computer_vision/classification/torchvision)   | Pytorch           |  Yes       |  1.15.1  |
+| [ResNet50, ResNeXt101](PyTorch/computer_vision/classification/torchvision)              | Pytorch           |  Yes       |  1.21.4  |
 | [ResNet50 (Pytorch Lightning)](PyTorch/computer_vision/classification/lightning/resnet) | Pytorch Lightning |            |  1.15.1  |
-| [MobileNetV2](PyTorch/computer_vision/classification/torchvision)                       | Pytorch           |  Yes       |  1.15.1  |
-| [GoogLeNet](PyTorch/computer_vision/classification/torchvision)                         | Pytorch           |  Yes       |  1.15.1  |
 | [UNet2D,UNet3D](PyTorch/computer_vision/segmentation/unet)                              | Pytorch Lightning |            |  1.15.1  |
 | [YOLOX](PyTorch/computer_vision/detection/yolox)                                        | Pytorch           |  Yes       |  1.15.1  |
 | [SSD](PyTorch/computer_vision/detection/ssd)                                            | Pytorch           |            |  1.15.1  |
