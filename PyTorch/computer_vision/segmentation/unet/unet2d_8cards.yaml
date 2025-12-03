@@ -1,144 +1,53 @@
-apiVersion: kubeflow.org/v2beta1
-kind: MPIJob
+apiVersion: v1
+kind: Pod
 metadata:
-  name: yourusername-unet2d-8cards
+  name: unet-2d-8cards
   namespace: yourusername-restricted
 spec:
-  slotsPerWorker: 8
-  runPolicy:
-    cleanPodPolicy: Running
-  mpiReplicaSpecs:
-    Launcher:
-      replicas: 1
-      template:
-        spec:
-          nodeSelector:
-            brightcomputing.com/node-category: 'compute'
-          serviceAccountName: yourusername
-          volumes:
-            - name: mydir
-              hostPath:
-                path: /home/yourusername/models/voyager/unet_pytorch/1.15.1
-                type: Directory
-            - name: scratch
-              emptyDir: {}
-            - name: dataset
-              hostPath:
-                path: /voyager/ceph/users/yourusername/datasets/BraTS/pytorch/unet/01_2d
-                type: Directory
-            - name: output
-              hostPath:
-                path: /voyager/ceph/users/yourusername/results/unet_pytorch/2d/fold_0
-                type: Directory
-          hostIPC: true
-          containers:
-            - image: vault.habana.ai/gaudi-docker/1.15.1/ubuntu22.04/habanalabs/pytorch-installer-2.2.0:latest
-              name: unet-launcher
-              resources:
-                requests:
-                  cpu: 2
-                  memory: 4Gi
-                limits:
-                  cpu: 4
-                  memory: 8Gi
-              volumeMounts:
-                - name: mydir
-                  mountPath: /mydir
-                - name: scratch
-                  mountPath: /scratch
-                - name: dataset
-                  mountPath: /dataset
-                - name: output
-                  mountPath: /output
-              command: ["/bin/bash", "-c"]
-              args:
-                - >-
-                  declare -xr NUM_NODES=1;
-                  declare -xr NGPU_PER_NODE=8;
-                  declare -xr N_CARDS=$((NUM_NODES*NGPU_PER_NODE));
-
-                  declare -xr SYNAPSE_AI_VER=1.15.1;
-                  declare -xr RUN_PATH=/mydir;
-                  declare -xr MODEL_PATH=/scratch/Model-References/PyTorch/computer_vision/segmentation/Unet;
-
-                  declare -xr PYTHONPATH=$PYTHONPATH:/scratch/Model-References;
-
-                  HOSTSFILE=${HOSTSFILE:-$OMPI_MCA_orte_default_hostfile};
-                  declare -xr MASTER_ADDR=$(head -n 1 $HOSTSFILE | sed -n s/[[:space:]]slots.*//p);
-                  declare -xr MASTER_PORT=${MASTER_PORT:-15566};
-
-                  echo $MASTER_ADDR;
-                  echo $MASTER_PORT;
-
-                  sleep 15s;
-
-                  mpirun  --npernode 1 \
-                    --tag-output \
-                    --allow-run-as-root \
-                    --prefix $MPI_ROOT \
-                    -x MODEL_PATH \
-                    -x SYNAPSE_AI_VER \
-                    $RUN_PATH/setup.sh;
-
-
-                  mpirun -npernode 1 \
-                    -n ${NUM_NODES} \
-                    --allow-run-as-root \
-                    --bind-to none \
-                    --report-bindings \
-                    --tag-output \
-                    --merge-stderr-to-stdout --prefix $MPI_ROOT \
-                    -x MASTER_ADDR=$MASTER_ADDR \
-                    -x MASTER_PORT=$MASTER_PORT \
-                    -x MODEL_PATH \
-                    -x PYTHONPATH \
-                    -x N_CARDS \
-                    $RUN_PATH/run_unet2d.sh;
-
-
-    Worker:
-      replicas: 1
-      template:
-        spec:
-          serviceAccountName: yourusername
-          volumes:
-            - name: mydir
-              hostPath:
-                path: /home/yourusername/models/voyager/unet_pytorch/1.15.1
-                type: Directory
-            - name: scratch
-              emptyDir: {}
-            - name: dataset
-              hostPath:
-                path: /voyager/ceph/users/yourusername/datasets/BraTS/pytorch/unet/01_2d
-                type: Directory
-            - name: output
-              hostPath:
-                path: /voyager/ceph/users/yourusername/results/unet_pytorch/2d/fold_0
-                type: Directory
-          hostIPC: true
-          containers:
-            - image: vault.habana.ai/gaudi-docker/1.15.1/ubuntu22.04/habanalabs/pytorch-installer-2.2.0:latest
-              name: unet-worker
-              imagePullPolicy: Always
-              resources:
-                limits:
-                  habana.ai/gaudi: 8
-                  cpu: 95
-                  memory: 409Gi
-                  hugepages-2Mi: 95000Mi
-                requests:
-                  habana.ai/gaudi: 8
-                  cpu: 95
-                  memory: 409Gi
-                  hugepages-2Mi: 95000Mi
-              volumeMounts:
-                - name: mydir
-                  mountPath: /mydir
-                - name: scratch
-                  mountPath: /scratch
-                - name: dataset
-                  mountPath: /dataset
-                - name: output
-                  mountPath: /output
-
+  restartPolicy: Never
+  volumes:
+    - name: scratch
+      emptyDir: {}
+    - name: dataset
+      hostPath:
+        path: /voyager/ceph/users/yourusername/datasets/BraTS/pytorch/unet/01_2d
+        type: Directory
+    - name: output
+      hostPath:
+        path: /voyager/ceph/users/yourusername/results/unet_pytorch/2d/fold_0
+        type: Directory
+  hostIPC: true
+  containers:
+    - name: gaudi-container
+      image: vault.habana.ai/gaudi-docker/1.21.4/ubuntu22.04/habanalabs/pytorch-installer-2.6.0:latest
+      #image: vault.habana.ai/gaudi-docker/1.15.1/ubuntu22.04/habanalabs/pytorch-installer-2.2.0:latest
+      volumeMounts:
+        - mountPath: /scratch
+          name: scratch
+        - mountPath: /dataset
+          name: dataset
+        - mountPath: /output
+          name: output
+      resources:
+        limits:
+          memory: 256G
+          cpu: 94
+          habana.ai/gaudi: 8
+          hugepages-2Mi: 30000Mi
+        requests:
+          memory: 256G
+          cpu: 94
+          habana.ai/gaudi: 8
+          hugepages-2Mi: 30000Mi
+      command: ["/bin/sh","-c"]
+      args:
+        - hl-smi;
+          export HOME=/scratch/tmp;
+          mkdir -p /scratch/tmp;
+          cd /scratch;
+          git clone -b 1.21.0 https://github.com/HabanaAI/Model-References;
+          export PYTHONPATH=/scratch/Model-References:$PYTHONPATH;
+          export PATH=/scratch/tmp/.local/bin:$PATH;
+          cd Model-References/PyTorch/computer_vision/segmentation/Unet;
+          pip install -r ./requirements.txt;
+          python3 -u  main.py --results /output --task 01 --logname res_log --fold 0 --hpus 8 --gpus 0 --data /dataset --seed 1 --num_workers 8 --affinity disabled --norm instance --dim 2 --optimizer fusedadamw  --exec_mode train --learning_rate 0.001 --autocast --deep_supervision --batch_size 64 --val_batch_size 64 --max_epochs 20 ; 

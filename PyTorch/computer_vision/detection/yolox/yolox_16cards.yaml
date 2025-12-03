@@ -1,7 +1,7 @@
 apiVersion: kubeflow.org/v2beta1
 kind: MPIJob
 metadata:
-  name: yourusername-yolox-16cards
+  name: yourusername-yolox-16cards-gaudi2
   namespace: yourusername-restricted
 spec:
   slotsPerWorker: 8
@@ -18,7 +18,7 @@ spec:
           volumes:
             - name: mydir
               hostPath:
-                path: /home/yourusername/models/voyager/yolox/1.15.1
+                path: /home/yourusername/models/voyager/yolox/1.21.4
                 type: Directory
             - name: scratch
               emptyDir: {}
@@ -32,7 +32,7 @@ spec:
                 type: Directory
           hostIPC: true
           containers:
-            - image: vault.habana.ai/gaudi-docker/1.15.1/ubuntu22.04/habanalabs/pytorch-installer-2.2.0:latest
+            - image: vault.habana.ai/gaudi-docker/1.21.4/ubuntu22.04/habanalabs/pytorch-installer-2.6.0:latest
               name: yolox-launcher
               resources:
                 requests:
@@ -56,13 +56,15 @@ spec:
               command: ["/bin/bash", "-c"]
               args:
                 - >-
+                  /usr/bin/ssh-keygen -A;
+                  /usr/sbin/sshd;
                   declare -xr NUM_NODES=2;
-                  declare -xr SYNAPSE_AI_VER=1.15.1;
+                  declare -xr SYNAPSE_AI_VER=1.21.0;
 
                   declare -xr RUN_PATH=/mydir;
                   declare -xr MODEL_ROOT=/scratch/Model-References;
                   declare -xr MODEL_PATH=$MODEL_ROOT/PyTorch/computer_vision/detection/yolox;
-                  sleep 20s;
+                  sleep 30s;
 
                   mpirun  --npernode 1 \
                     --tag-output \
@@ -73,6 +75,7 @@ spec:
                     $RUN_PATH/setup.sh;
 
                   $RUN_PATH/run_yolox.sh;
+                  sleep 500s;
 
 
     Worker:
@@ -80,10 +83,15 @@ spec:
       template:
         spec:
           serviceAccountName: yourusername
+          tolerations:
+            - key: "synapse"
+              operator: "Equal"
+              value: "1.21"
+              effect: "NoSchedule"
           volumes:
             - name: mydir
               hostPath:
-                path: /home/yourusername/models/voyager/yolox/1.15.1
+                path: /home/yourusername/models/voyager/yolox/1.21.4
                 type: Directory
             - name: scratch
               emptyDir: {}
@@ -97,7 +105,7 @@ spec:
                 type: Directory
           hostIPC: true
           containers:
-            - image: vault.habana.ai/gaudi-docker/1.15.1/ubuntu22.04/habanalabs/pytorch-installer-2.2.0:latest
+            - image: vault.habana.ai/gaudi-docker/1.21.4/ubuntu22.04/habanalabs/pytorch-installer-2.6.0:latest
               name: yolox-worker
               imagePullPolicy: Always
               resources:
@@ -105,12 +113,12 @@ spec:
                   habana.ai/gaudi: 8
                   cpu: 95
                   memory: 409Gi
-                  hugepages-2Mi: 95000Mi
+                  hugepages-2Mi: 30000Mi
                 requests:
                   habana.ai/gaudi: 8
                   cpu: 95
                   memory: 409Gi
-                  hugepages-2Mi: 95000Mi
+                  hugepages-2Mi: 30000Mi
               volumeMounts:
                 - name: mydir
                   mountPath: /mydir
@@ -120,4 +128,10 @@ spec:
                   mountPath: /dataset
                 - name: output
                   mountPath: /output
+              command: ["/bin/bash", "-c"]
+              args:
+                - >-
+                   /usr/bin/ssh-keygen -A;
+                   /usr/sbin/sshd;
+                   sleep 365d;
  

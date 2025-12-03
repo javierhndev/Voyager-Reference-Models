@@ -4,7 +4,7 @@ Here we provide the yaml files and instructions to train the UNet2D and UNet3D m
 
 ## Overview
 
-The model is supported by Intel-Habana. More details can be found in their [repository](https://github.com/HabanaAI/Model-References/tree/1.13.0/PyTorch/computer_vision/segmentation/Unet). This tutorial uses SynapseAI v1.15.1.
+The model is supported by Intel-Habana. More details can be found in their [repository](https://github.com/HabanaAI/Model-References/tree/1.13.0/PyTorch/computer_vision/segmentation/Unet). This tutorial uses SynapseAI v1.21.4.
 
 
 
@@ -70,75 +70,4 @@ python3 -u  main.py --results /output --task 01 --logname res_log --fold 0 --hpu
 
 **Run training on 8 HPUs:**
 
-The execution of this model on multiple cards is slighyly different than other Pytorch models. Here we execute the mpirun `-npernode 1` and then Pythorch Lightning handles the parallelization itself.
-
-**UNet2D**
-To run on multiple cards we launch an MPI job with three files: `unet2d_8cards.yaml`, `setup.sh` and `run_unet2d.sh`. Some variables in the `unet2d_8cards.yaml` need to be modified to your own configuration:
-- `mydir`: The location where you keep those three files.
-- `dataset`: The location of the Brats 2D dataset.
-- `output`: Where you want to store the results.
-
-
-Neither `setup.sh` or `run_unet2d.sh` need to be modified. Once the MPI job is launched, the `run_unet2d.sh` will run UNet2D in lazy mode, BF16 mixed precision, batch size 64, world-size 8, fold 0:
-```bash
-python3 -u $MODEL_PATH/main.py \
-                      --results /output \
-                      --task 1 \
-                      --logname res_log \
-                      --fold 0 \
-                      --hpus $N_CARDS \
-                      --gpus 0 \
-                      --data /dataset \
-                      --seed 123 \
-                      --num_workers 8 \
-                      --affinity disabled \
-                      --norm instance \
-                      --dim 2 \
-                      --optimizer fusedadamw  \
-                      --exec_mode train \
-                      --learning_rate 0.001 \
-                      --autocast \
-                      --deep_supervision \
-                      --batch_size 64 \
-                      --val_batch_size 64 \
-                      --min_epochs 30 \
-                      --max_epochs 100 \
-                      --train_batches 0 \
-                      --test_batches 0
-```
-
-**UNet3D**
-The procedure is very similar to the UNet2D.
-There are three files: `unet3d_8cards.yaml`, `setup.sh` and `run_unet3d.sh`. Some variables in the `unet3d_8cards.yaml` need to be modified to your own configuration:
-- `mydir`: The location where you keep those three files.
-- `dataset`: The location of the Brats 3D dataset.
-- `output`: Where you want to store the results.
-
-It will run UNet3D in Lazy mode, bf16 mixed precision, Batch Size 2, world-size 8:
-```bash
-python3 -u $MODEL_PATH/main.py \
-                      --results /output \
-                      --task 1 \
-                      --logname res_log \
-                      --fold 0 \
-                      --hpus $N_CARDS \
-                      --gpus 0 \
-                      --data /dataset \
-                      --seed 1 \
-                      --num_workers 8 \
-                      --affinity disabled \
-                      --norm instance \
-                      --dim 3 \
-                      --optimizer fusedadamw  \
-                      --exec_mode train \
-                      --learning_rate 0.001 \
-                      --autocast \
-                      --deep_supervision \
-                      --batch_size 2 \
-                      --val_batch_size 2 \
-                      --min_epochs 6 \
-                      --max_epochs 20 
-```
-
-
-
+We provide two yaml files to execute the UNet2D and UNet3D models in 8 cards. The main difference from the single card examples is that the actual number of cards used needs to be passed as a parameter to Python. Pytorch Lightning takes care of the parallelization itself and no `mpirun` needs to be used.

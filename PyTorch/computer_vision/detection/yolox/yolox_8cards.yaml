@@ -1,124 +1,69 @@
-apiVersion: kubeflow.org/v2beta1
-kind: MPIJob
+apiVersion: v1
+kind: Pod
 metadata:
-  name: yourusername-yolox-8cards
+  name: yolox-8cards
   namespace: yourusername-restricted
 spec:
-  slotsPerWorker: 8
-  runPolicy:
-    cleanPodPolicy: Running
-  mpiReplicaSpecs:
-    Launcher:
-      replicas: 1
-      template:
-        spec:
-          nodeSelector:
-            brightcomputing.com/node-category: 'compute'
-          serviceAccountName: yourusername
-          volumes:
-            - name: mydir
-              hostPath:
-                path: /home/yourusername/models/voyager/yolox/1.15.1
-                type: Directory
-            - name: scratch
-              emptyDir: {}
-            - name: dataset
-              hostPath:
-                path: /voyager/ceph/users/yourusername/datasets/COCO
-                type: Directory
-            - name: output
-              hostPath:
-                path: /voyager/ceph/users/yourusername/results/yolox
-                type: Directory
-          hostIPC: true
-          containers:
-            - image: vault.habana.ai/gaudi-docker/1.15.1/ubuntu22.04/habanalabs/pytorch-installer-2.2.0:latest
-              name: yolox-launcher
-              resources:
-                requests:
-                  cpu: 2
-                  memory: 4Gi
-                limits:
-                  cpu: 4
-                  memory: 8Gi
-              volumeMounts:
-                - name: mydir
-                  mountPath: /mydir
-                - name: scratch
-                  mountPath: /scratch
-                - name: dataset
-                  mountPath: /dataset
-                - name: output
-                  mountPath: /output
-                  #env:
-                  #- name: dataset
-                  #value: "/ceph/datasets/bloom/checkpoints"
-              command: ["/bin/bash", "-c"]
-              args:
-                - >-
-                  declare -xr NUM_NODES=1;
-                  declare -xr SYNAPSE_AI_VER=1.15.1;
+  restartPolicy: Never
+  volumes:
+    - name: scratch
+      emptyDir: {}
+    - name: dataset
+      hostPath:
+        path: /voyager/ceph/users/yourusername/datasets/COCO
+        type: Directory
+    - name: output
+      hostPath:
+        path: /voyager/ceph/users/yourusername/results/yolox
+        type: Directory
+  hostIPC: true
+  containers:
+    - name: gaudi-container
+      image: vault.habana.ai/gaudi-docker/1.21.4/ubuntu22.04/habanalabs/pytorch-installer-2.6.0:latest
+      volumeMounts:
+        - mountPath: /scratch
+          name: scratch
+        - mountPath: /dataset
+          name: dataset
+        - mountPath: /output
+          name: output
+      resources:
+        limits:
+          memory: 400G
+          cpu: 94
+          habana.ai/gaudi: 8
+          hugepages-2Mi: 30000Mi
+        requests:
+          memory: 400G
+          cpu: 94
+          habana.ai/gaudi: 8
+          hugepages-2Mi: 30000Mi
+      command: ["/bin/sh","-c"]
+      args:
+        - >-
+           hl-smi;
+           export HOME=/scratch/tmp;
+           export PATH=/scratch/tmp/.local/bin:$PATH;
+           export PYTHONPATH=/scratch/Model-References/PyTorch/computer_vision/detection/yolox:$PYTHONPATH;
+           export PT_HPU_LAZY_MODE=1;
 
-                  declare -xr RUN_PATH=/mydir;
-                  declare -xr MODEL_ROOT=/scratch/Model-References;
-                  declare -xr MODEL_PATH=$MODEL_ROOT/PyTorch/computer_vision/detection/yolox;
-                  sleep 20s;
+           mkdir -p /scratch/tmp/;
+           cd /scratch;
+           git clone -b 1.21.0 https://github.com/HabanaAI/Model-References;
+           cd Model-References/PyTorch/computer_vision/detection/yolox;
+           pip install -r requirements.txt;
+           pip install -v -e .;
+           export CMD="python tools/train.py \
+                   --name yolox-s --devices 8 --batch-size 16 --data_dir /dataset --hpu steps 500 output_dir /output";
+           mpirun -n 8 \
+               --bind-to core \
+               --prefix $MPI_ROOT \
+               --map-by ppr:4:socket:PE=6 \
+               --rank-by core \
+               --report-bindings \
+               --allow-run-as-root \
+               -x PYTHONPATH \
+               -x PT_HPU_LAZY_MODE \
+               $CMD;
+         
 
-                  mpirun  --npernode 1 \
-                    --tag-output \
-                    --allow-run-as-root \
-                    --prefix $MPI_ROOT \
-                    -x MODEL_PATH \
-                    -x SYNAPSE_AI_VER \
-                    $RUN_PATH/setup.sh;
-
-                  $RUN_PATH/run_yolox.sh;
-                  #sleep infinity;
-
-
-    Worker:
-      replicas: 1
-      template:
-        spec:
-          serviceAccountName: yourusername
-          volumes:
-            - name: mydir
-              hostPath:
-                path: /home/yourusername/models/voyager/yolox/1.15.1
-                type: Directory
-            - name: scratch
-              emptyDir: {}
-            - name: dataset
-              hostPath:
-                path: /voyager/ceph/users/yourusername/datasets/COCO
-                type: Directory
-            - name: output
-              hostPath:
-                path: /voyager/ceph/users/yourusername/results/yolox
-                type: Directory
-          hostIPC: true
-          containers:
-            - image: vault.habana.ai/gaudi-docker/1.15.1/ubuntu22.04/habanalabs/pytorch-installer-2.2.0:latest
-              name: yolox-worker
-              imagePullPolicy: Always
-              resources:
-                limits:
-                  habana.ai/gaudi: 8
-                  cpu: 95
-                  memory: 409Gi
-                  hugepages-2Mi: 95000Mi
-                requests:
-                  habana.ai/gaudi: 8
-                  cpu: 95
-                  memory: 409Gi
-                  hugepages-2Mi: 95000Mi
-              volumeMounts:
-                - name: mydir
-                  mountPath: /mydir
-                - name: scratch
-                  mountPath: /scratch
-                - name: dataset
-                  mountPath: /dataset
-                - name: output
-                  mountPath: /output
- 
