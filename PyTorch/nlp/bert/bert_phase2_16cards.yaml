@@ -1,7 +1,7 @@
 apiVersion: kubeflow.org/v2beta1
 kind: MPIJob
 metadata:
-  name: yourusername-bert-16cards
+  name: yourusername-bert-p2-16cards
   namespace: yourusername-restricted
 spec:
   slotsPerWorker: 8
@@ -18,7 +18,7 @@ spec:
           volumes:
             - name: mydir
               hostPath:
-                path: /home/yourusername/models/voyager/bert_pytorch/1.15.1/multicard/fp32
+                path: /home/yourusername/models/voyager/bert_pytorch/1.21.4
                 type: Directory
             - name: scratch
               emptyDir: {}
@@ -36,7 +36,7 @@ spec:
                 type: Directory
           hostIPC: true
           containers:
-            - image: vault.habana.ai/gaudi-docker/1.15.1/ubuntu22.04/habanalabs/pytorch-installer-2.2.0:latest
+            - image: vault.habana.ai/gaudi-docker/1.21.4/ubuntu22.04/habanalabs/pytorch-installer-2.6.0:latest
               name: bert-launcher
               resources:
                 requests:
@@ -59,15 +59,19 @@ spec:
               command: ["/bin/bash", "-c"]
               args:
                 - >-
+                  /usr/bin/ssh-keygen -A;
+                  /usr/sbin/sshd;
                   declare -xr NUM_NODES=2;
                   declare -xr NGPU_PER_NODE=8;
                   declare -xr N_CARDS=$((NUM_NODES*NGPU_PER_NODE));
 
-                  declare -xr SYNAPSE_AI_VER=1.15.1;
+                  declare -xr SYNAPSE_AI_VER=1.21.0;
                   declare -xr RUN_PATH=/mydir;
                   declare -xr MODEL_PATH=/scratch/Model-References/PyTorch/nlp/bert;
 
                   declare -xr PYTHONPATH=$PYTHONPATH:/scratch/Model-References;
+
+                  declare -xr PT_HPU_LAZY_MODE=0;
 
                   HOSTSFILE=${HOSTSFILE:-$OMPI_MCA_orte_default_hostfile};
                   declare -xr MASTER_ADDR=$(head -n 1 $HOSTSFILE | sed -n s/[[:space:]]slots.*//p);
@@ -87,27 +91,15 @@ spec:
                     $RUN_PATH/setup.sh;
 
                   declare -xr CMD="python3 $MODEL_PATH/run_pretraining.py \
-                                   --do_train \
-                                   --bert_model=bert-large-uncased \
-                                   --config_file=$MODEL_PATH/bert_config.json \
-                                   --use_habana \
-                                   --allreduce_post_accumulation \
-                                   --allreduce_post_accumulation_fp16 \
-                                   --json-summary=/dllog/dllogger.json \
-                                   --output_dir=/output \
-                                   --use_fused_lamb \
-                                   --input_dir=/dataset//hdf5_lower_case_1_seq_len_128_max_pred_20_masked_lm_prob_0.15_random_seed_12345_dupe_factor_5/wikicorpus_en \
-                                   --train_batch_size=8192 \
-                                   --max_seq_length=128 \
-                                   --max_predictions_per_seq=20 \
-                                   --warmup_proportion=0.2843 \
-                                   --max_steps=30 \
-                                   --num_steps_per_checkpoint=15 \
-                                   --learning_rate=0.006 \
-                                   --gradient_accumulation_steps=256 \
-                                   --enable_packed_data_mode False" ;
-                  
-                  
+                          --do_train --bert_model=bert-large-uncased \
+                          --autocast --use_torch_compile \
+                          --config_file=$MODEL_PATH/bert_config.json --use_habana --allreduce_post_accumulation --allreduce_post_accumulation_fp16 \
+                          --json-summary=/dllog/dllogger.json --output_dir=/output --use_fused_lamb \
+                          --input_dir=/dataset/hdf5_lower_case_1_seq_len_512_max_pred_80_masked_lm_prob_0.15_random_seed_12345_dupe_factor_5/wikicorpus_en \
+                          --train_batch_size=4096 --max_seq_length=512 --max_predictions_per_seq=80 --warmup_proportion=0.128 \
+                          --max_steps=25 --num_steps_per_checkpoint=200 --learning_rate=0.004 --gradient_accumulation_steps=512 \
+                          --resume_from_checkpoint --phase1_end_step=10 --phase2 \
+                          --enable_packed_data_mode False";
 
                   mpirun -np ${N_CARDS} \
                     --allow-run-as-root \
@@ -119,9 +111,10 @@ spec:
                     -x MASTER_ADDR=$MASTER_ADDR \
                     -x MASTER_PORT=$MASTER_PORT \
                     -x PYTHONPATH \
+                    -x PT_HPU_LAZY_MODE \
                     $CMD;
 
-                    #sleep infinity;
+                  sleep 100s;
 
     Worker:
       replicas: 2
@@ -131,7 +124,7 @@ spec:
           volumes:
             - name: mydir
               hostPath:
-                path: /home/yourusername/models/voyager/bert_pytorch/1.15.1/multicard/fp32
+                path: /home/yourusername/models/voyager/bert_pytorch/1.21.4
                 type: Directory
             - name: scratch
               emptyDir: {}
@@ -149,7 +142,7 @@ spec:
                 type: Directory
           hostIPC: true
           containers:
-            - image: vault.habana.ai/gaudi-docker/1.15.1/ubuntu22.04/habanalabs/pytorch-installer-2.2.0:latest
+            - image: vault.habana.ai/gaudi-docker/1.21.4/ubuntu22.04/habanalabs/pytorch-installer-2.6.0:latest
               name: bert-worker
               imagePullPolicy: Always
               resources:
@@ -157,12 +150,12 @@ spec:
                   habana.ai/gaudi: 8
                   cpu: 95
                   memory: 409Gi
-                  hugepages-2Mi: 95000Mi
+                  hugepages-2Mi: 30000Mi
                 requests:
                   habana.ai/gaudi: 8
                   cpu: 95
                   memory: 409Gi
-                  hugepages-2Mi: 95000Mi
+                  hugepages-2Mi: 30000Mi
               volumeMounts:
                 - name: mydir
                   mountPath: /mydir
@@ -174,4 +167,10 @@ spec:
                   mountPath: /output
                 - name: dllog
                   mountPath: /dllog
-
+              command: ["/bin/bash", "-c"]
+              args:
+                - >-
+                   /usr/bin/ssh-keygen -A;
+                   /usr/sbin/sshd;
+                   sleep 365d;
+ 

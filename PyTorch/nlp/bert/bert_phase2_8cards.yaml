@@ -1,0 +1,82 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: bert-p2-8cards
+  namespace: yourusername-restricted
+spec:
+  restartPolicy: Never
+  volumes:
+    - name: scratch
+      emptyDir: {}
+    - name: dataset
+      hostPath:
+        path: /voyager/ceph/users/yourusername/datasets/bert/pytorch
+        type: Directory
+    - name: output
+      hostPath:
+        path: /voyager/ceph/users/yourusername/results/bert_pytorch/8cards
+        type: Directory
+    - name: dllog
+      hostPath:
+        path: /voyager/ceph/users/yourusername/tmp/log_directory
+        type: Directory
+  hostIPC: true
+  containers:
+    - name: gaudi-container
+      image: vault.habana.ai/gaudi-docker/1.21.4/ubuntu22.04/habanalabs/pytorch-installer-2.6.0:latest
+      volumeMounts:
+        - mountPath: /scratch
+          name: scratch
+        - mountPath: /dataset
+          name: dataset
+        - mountPath: /output
+          name: output
+        - mountPath: /dllog
+          name: dllog 
+      resources:
+        limits:
+          memory: 256G
+          cpu: 94
+          habana.ai/gaudi: 8
+          hugepages-2Mi: 30000Mi
+        requests:
+          memory: 256G
+          cpu: 94
+          habana.ai/gaudi: 8
+          hugepages-2Mi: 30000Mi
+      command: ["/bin/sh","-c"]
+      args:
+        - >- 
+            hl-smi;
+            export HOME=/scratch/tmp;
+            export PATH=/scratch/tmp/.local/bin:$PATH;
+            mkdir -p /scratch/tmp/;
+            cd /scratch;
+            export N_CARDS=8;
+            git clone -b 1.21.0 https://github.com/HabanaAI/Model-References;
+            export PYTHONPATH=/scratch/Model-References:$PYTHONPATH;
+            cd Model-References/PyTorch/nlp/bert;
+            pip install -r requirements.txt;
+            export PT_HPU_LAZY_MODE=0;
+            export CMD="python3 run_pretraining.py \
+                          --do_train --bert_model=bert-large-uncased \
+                          --autocast --use_torch_compile \
+                          --config_file=./bert_config.json --use_habana --allreduce_post_accumulation --allreduce_post_accumulation_fp16 \
+                          --json-summary=/dllog/dllogger.json --output_dir=/output --use_fused_lamb \
+                          --input_dir=/dataset/hdf5_lower_case_1_seq_len_512_max_pred_80_masked_lm_prob_0.15_random_seed_12345_dupe_factor_5/wikicorpus_en \
+                          --train_batch_size=4096 --max_seq_length=512 --max_predictions_per_seq=80 --warmup_proportion=0.128 \
+                          --max_steps=25 --num_steps_per_checkpoint=200 --learning_rate=0.004 --gradient_accumulation_steps=512 \
+                          --resume_from_checkpoint --phase1_end_step=10 --phase2 \
+                          --enable_packed_data_mode False";
+
+            mpirun -n ${N_CARDS} \
+                    --allow-run-as-root \
+                    --bind-to core \
+                    --map-by ppr:4:socket:PE=6 \
+                    -rank-by core --report-bindings \
+                    --tag-output \
+                    --merge-stderr-to-stdout \
+                    -x PYTHONPATH \
+                    $CMD;
+
+

@@ -1,7 +1,7 @@
 # BERT model using PyTorch
 Here we provide the scripts and files to download the dataset and train a BERT model on Voyager using Pytorch. The model is mantained by Habana and you can find it in their [repository](https://github.com/HabanaAI/Model-References/tree/1.13.0/PyTorch/nlp/bert). Please check their repository for a deeper explanation of the BERT model.
 
-The model was verified on Voyager with SynapseAI version 1.15.1.
+The model was verified on Voyager with SynapseAI version 1.21.4.
 
 ## Model Overview
 
@@ -84,99 +84,45 @@ Before training, you need to create a log directory to store `dlloger.json`. The
 All the pre-training examples shown here run a few timesteps to test the model. So the accuracy of the results may be very small.
 
 ### Pre-training
-**Single Card**
-
-- The pretraining of **Phase 1** of the BERT Large can be done using the `bert_phase1_1card.yaml` in the *1card* folder. Launch the pod with
-  ```bash
-  kubectl create -f bert_phase1_1card.yaml
-  ```   
-  Remeber to change the *dataset, dllog* and *output* folders to your own folder. The Single card run is too slow but can be used to test the model.
-
-  It runs in lazy mode 1 HPU, unpacked data, BF16 mixed precision, batch size 64 for Phase1 and a few timesteps only:
-  ```bash
-  export HOME=/scratch/tmp;
-  export PATH=/scratch/tmp/.local/bin:$PATH;
-  mkdir -p /scratch/tmp/;
-  cd /scratch;
-  git clone -b 1.15.1 https://github.com/HabanaAI/Model-References;
-  export PYTHONPATH=/scratch/Model-References:$PYTHONPATH;
-  cd Model-References/PyTorch/nlp/bert;
-  pip install -r requirements.txt;
-  python3 run_pretraining.py --do_train --bert_model=bert-large-uncased \
-         --autocast --config_file=./bert_config.json \
-         --use_habana --allreduce_post_accumulation --allreduce_post_accumulation_fp16 \
-         --json-summary=/dllog/dllogger.json --output_dir=/output --use_fused_lamb \
-         --input_dir=/dataset/hdf5_lower_case_1_seq_len_128_max_pred_20_masked_lm_prob_0.15_random_seed_12345_dupe_factor_5/wikicorpus_en \
-         --train_batch_size=8192 --max_seq_length=128 --max_predictions_per_seq=20 --max_steps=10 \
-         --warmup_proportion=0.2843 --num_steps_per_checkpoint=5 --learning_rate=0.006 --gradient_accumulation_steps=128 \
-         --enable_packed_data_mode False ;
-
-  ```
-
-- **Phase 2** has not been checked in a single card because Phase 1 is too slow.
 
 **8 Cards**
 
-Many parameters passed to the model are the same as in a single card. But the *yaml* files have been modified to run in multiple HPUs. Here we launch an MPIJob to run the model in one node (with 8 cards).
+We launch a pod with `mpirun` to run the model in one node (with 8 cards).
 
-- Pretraining **Phase 1** of BERT Large (Lazy mode, 8 HPUs, unpacked data, FP32, per chip batch size of 64). The MPIJob can be launched using the `bert_phase1_8cards.yaml` located in the `8 cards` folder. You need to modify the `mydir` volumes to point to the location of your `yaml` and `setup.sh` files.
+- Pretraining **Phase 1** of BERT Large (Eager mode, 8 HPUs, unpacked data, BF16, per chip batch size of 64). The pod can be launched using the `bert_phase1_8cards.yaml`.
 
-  Remeber to change the *dataset, dllog* and *output* folders to your own. In the launcher AND worker.
+  Remeber to change the *dataset, dllog* and *output* folders to your own.
 
+  It will execute the model with the following parameters:
   ```bash
-  python3 $MODEL_PATH/run_pretraining.py \
-              --do_train \
-              --bert_model=bert-large-uncased \
-              --config_file=$MODEL_PATH/bert_config.json \
-              --use_habana \
-              --allreduce_post_accumulation \
-              --allreduce_post_accumulation_fp16 \
-              --json-summary=/dllog/dllogger.json \
-              --output_dir=/output \
-              --use_fused_lamb \
-              --input_dir=/dataset//hdf5_lower_case_1_seq_len_128_max_pred_20_masked_lm_prob_0.15_random_seed_12345_dupe_factor_5/wikicorpus_en \
-              --train_batch_size=8192 \
-              --max_seq_length=128 \
-              --max_predictions_per_seq=20 \
-              --warmup_proportion=0.2843 \
-              --max_steps=30 \
-              --num_steps_per_checkpoint=15 \
-              --learning_rate=0.006 \
-              --gradient_accumulation_steps=128 \
-              --enable_packed_data_mode False
+  python3 run_pretraining.py \
+          --do_train --bert_model=bert-large-uncased --autocast --config_file=./bert_config.json --use_habana \
+          --allreduce_post_accumulation --allreduce_post_accumulation_fp16 --json-summary=/dllog/dllogger.json \
+          --output_dir=/output --use_fused_lamb \
+          --input_dir=/dataset/hdf5_lower_case_1_seq_len_128_max_pred_20_masked_lm_prob_0.15_random_seed_12345_dupe_factor_5/wikicorpus_en \
+          --train_batch_size=8192 --max_seq_length=128 --max_predictions_per_seq=20 --max_steps=10 \
+          --warmup_proportion=0.2843 --num_steps_per_checkpoint=5 --learning_rate=0.006 --gradient_accumulation_steps=128 \
+          --enable_packed_data_mode False --use_torch_compile
   ```
 
-- Pretraining of **Phase 2**. You can use `bert_phase2_8cards.yaml` to launch the MPIJob to train the model. It takes as input the checkpoint from phase 1 (you need the pass the last timestep form Phase 1 in `phase1_end_step`).
+- Pretraining of **Phase 2**. You can use `bert_phase2_8cards.yaml` to launch the pod to train the model. It takes as input the checkpoint from phase 1 (you need the pass the last timestep form Phase 1 in `phase1_end_step`).
 
   ```bash
-  python3 $MODEL_PATH/run_pretraining.py \
-            --do_train \
-            --bert_model=bert-large-uncased \
-            --config_file=$MODEL_PATH/bert_config.json \
-            --use_habana \
-            --allreduce_post_accumulation \
-            --allreduce_post_accumulation_fp16 \
-            --json-summary=/dllog/dllogger.json \
-            --output_dir=/output \
-            --use_fused_lamb \
-            --input_dir=/dataset/hdf5_lower_case_1_seq_len_512_max_pred_80_masked_lm_prob_0.15_random_seed_12345_dupe_factor_5/wikicorpus_en \
-            --train_batch_size=4096 \
-            --max_seq_length=512 \
-            --max_predictions_per_seq=80 \
-            --warmup_proportion=0.128 \
-            --max_steps=10 \
-            --num_steps_per_checkpoint=5 \
-            --learning_rate=0.004 \
-            --gradient_accumulation_steps=512 \
-            --resume_from_checkpoint \
-            --phase1_end_step=15 \
-            --phase2 \
-            --enable_packed_data_mode False
+  python3 run_pretraining.py \
+          --do_train --bert_model=bert-large-uncased \
+          --autocast --use_torch_compile \
+          --config_file=./bert_config.json --use_habana --allreduce_post_accumulation --allreduce_post_accumulation_fp16 \
+          --json-summary=/dllog/dllogger.json --output_dir=/output --use_fused_lamb \
+          --input_dir=/dataset/hdf5_lower_case_1_seq_len_512_max_pred_80_masked_lm_prob_0.15_random_seed_12345_dupe_factor_5/wikicorpus_en \
+          --train_batch_size=4096 --max_seq_length=512 --max_predictions_per_seq=80 --warmup_proportion=0.128 \
+          --max_steps=25 --num_steps_per_checkpoint=200 --learning_rate=0.004 --gradient_accumulation_steps=512 \
+          --resume_from_checkpoint --phase1_end_step=10 --phase2 \
+          --enable_packed_data_mode False
   ```
 
 **16 Cards (multi-node)**
 
-The model can run in multiple nodes. Here we provide a `yaml` file example that runs in 2 nodes (16 HPUs). The model parameters are exactly the same as in the `8cards` case. You can find, in the `16cards` folder, the `bert_phase1_16cards.yaml` and `bert_phase2_16cards.yaml` to run Phase1 and Phase2 respectively.
+The model can run in multiple nodes using an `MPIJob`. Here we provide a `yaml` file example that runs in 2 nodes (16 HPUs). The model parameters are exactly the same as in the `8cards` case but yaml needs to define the specs for the MPIJob. The example can be found in `bert_phase1_16cards.yaml` and `bert_phase2_16cards.yaml` to run Phase1 and Phase2 respectively.
 
 
 ## Fine-tuning
@@ -185,11 +131,13 @@ The model can run in multiple nodes. Here we provide a `yaml` file example that 
 You can use the `bert_ftuning_8cards.yaml` to perform the fine-tuning on the pretrained data. We have used Habana's pretrained model as our initial checkpoint. Please make sure that `--init_checkpoint` points to the checkpoint you want. The fine-tuning just requires a few minutes.
 
 ```bash
+export PT_HPU_LAZY_MODE=0;
 python3 $MODEL_PATH/run_squad.py \
            --do_train \
            --bert_model=bert-large-uncased \
            --config_file=$MODEL_PATH/bert_config.json \
            --use_habana \
+           --use_torch_compile \
            --autocast \
            --use_fused_adam \
            --do_lower_case \
@@ -220,6 +168,7 @@ Inference can be run in a single HPU. To run it, one can use the `bert_inference
 
 It will execute: 
 ```bash
+export PT_HPU_LAZY_MODE=0;
 python3 run_squad.py --bert_model=bert-large-uncased --autocast \
            --config_file=./bert_config.json \
            --use_habana --do_lower_case --output_dir=/output \
@@ -227,7 +176,7 @@ python3 run_squad.py --bert_model=bert-large-uncased --autocast \
            --predict_batch_size=24 \
            --init_checkpoint=/dataset/pretrained-habana/1.13/ckpt_7038.pt \
            --vocab_file=/dataset/uncased_L-24_H-1024_A-16/vocab.txt \
-           --do_predict  \
+           --do_predict  --use_torch_compile \
            --predict_file=/dataset/squad/v1.1/dev-v1.1.json \
            --do_eval --eval_script=/dataset/squad/v1.1/evaluate-v1.1.py
 

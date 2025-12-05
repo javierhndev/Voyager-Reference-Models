@@ -24,7 +24,7 @@ The list of models is being improved. Your feedback is greatly appreciated. Feel
 | [UNet2D,UNet3D](PyTorch/computer_vision/segmentation/unet)                              | Pytorch Lightning |            |  1.21.4  |
 | [YOLOX](PyTorch/computer_vision/detection/yolox)                                        | Pytorch           |  Yes       |  1.21.4  |
 | [SSD](PyTorch/computer_vision/detection/ssd)                                            | Pytorch           |            |  1.15.1  |
-| [Vision Transformer](PyTorch/computer_vision/classification/ViT)                        | Pytorch           |  Yes       |  1.15.1  |
+| [Vision Transformer](PyTorch/computer_vision/classification/ViT)                        | Pytorch           |  Yes       |  1.21.4  |
 | [UNet-2D](TensorFlow/computer_vision/Unet2D)                                            | TensorFlow        |  Yes       |  1.15.1  |
 | [ResNet50 (Keras)](TensorFlow/computer_vision/Resnets/resnet_keras)                     | TensorFlow        |  Yes       |  1.15.1  |
 | [ResNeXt101](TensorFlow/computer_vision/Resnets/ResNeXt)                                | TensorFlow        |  Yes       |  1.15.1  |
@@ -33,7 +33,7 @@ The list of models is being improved. Your feedback is greatly appreciated. Feel
 ## Natural Language processing
 | Models                                                                          | Framework  | Multi-node  | Verified |
 | ------------------------------------------------------------------------------- | ---------- | ----------- | -------- |
-| [BERT](PyTorch/nlp/bert)                                                        | Pytorch    |  Yes        |   1.15.1 |
+| [BERT](PyTorch/nlp/bert)                                                        | Pytorch    |  Yes        |   1.21.4 |
 | [BART (fine-tuning,simpletransformers)](PyTorch/nlp/BART)                       | Pytorch    |  Yes        |   1.15.1 |
 | [Hugginface BLOOM (inference)](PyTorch/nlp/bloom)                               | Pytorch    |             |   1.15.1 |
 | [BERT 1.5B and 5B with Deepspeed](PyTorch/nlp/DeepSpeedExamples/deepspeed-bert) | Pytorch    |  Yes        |   1.15.1 |

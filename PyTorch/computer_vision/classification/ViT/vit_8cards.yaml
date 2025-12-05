@@ -1,8 +1,8 @@
 apiVersion: kubeflow.org/v2beta1
 kind: MPIJob
 metadata:
-  name: yourusername-vit-8cards
-  namespace: yourusername-restricted
+  name: javierhn-vit-8cards
+  namespace: javierhn-restricted
 spec:
   slotsPerWorker: 8
   runPolicy:
@@ -14,29 +14,29 @@ spec:
         spec:
           nodeSelector:
             brightcomputing.com/node-category: 'compute'
-          serviceAccountName: yourusername
+          serviceAccountName: javierhn
           volumes:
             - name: mydir
               hostPath:
-                path: /home/yourusername/models/voyager/vit_pt/1.15.1
+                path: /home/javierhn/models/voyager/vit_pt/1.21.4
                 type: Directory
             - name: scratch
               emptyDir: {}
             - name: dataset
               hostPath:
-                path: /voyager/ceph/users/yourusername/datasets/imagenet/ILSVRC2012
+                path: /voyager/ceph/users/javierhn/datasets/imagenet/ILSVRC2012
                 type: Directory
             - name: pretrained
               hostPath:
-                path: /voyager/ceph/users/yourusername/datasets/vit_pretrained
+                path: /voyager/ceph/users/javierhn/datasets/vit_pretrained
                 type: Directory
             - name: output
               hostPath:
-                path: /voyager/ceph/users/yourusername/results/vit
+                path: /voyager/ceph/users/javierhn/results/vit
                 type: Directory
           hostIPC: true
           containers:
-            - image: vault.habana.ai/gaudi-docker/1.15.1/ubuntu22.04/habanalabs/pytorch-installer-2.2.0:latest
+            - image: vault.habana.ai/gaudi-docker/1.21.4/ubuntu22.04/habanalabs/pytorch-installer-2.6.0:latest
               name: vit-launcher
               resources:
                 requests:
@@ -56,16 +56,15 @@ spec:
                   mountPath: /pretrained
                 - name: output
                   mountPath: /output
-                  #env:
-                  #- name: dataset
-                  #value: "/ceph/datasets/bloom/checkpoints"
               command: ["/bin/bash", "-c"]
               args:
                 - >-
+                  /usr/bin/ssh-keygen -A;
+                  /usr/sbin/sshd;
                   declare -xr NUM_NODES=1;
 
                   declare -xr RUN_PATH=/mydir;
-                  declare -xr SYNAPSE_AI_VER=1.15.1;
+                  declare -xr SYNAPSE_AI_VER=1.21.0;
                   declare -xr MODEL_ROOT=/scratch/Model-References;
                   declare -xr MODEL_PATH=$MODEL_ROOT/PyTorch/computer_vision/classification/ViT;
                   sleep 20s;
@@ -79,36 +78,36 @@ spec:
                     $RUN_PATH/setup.sh;
 
                   $RUN_PATH/run_vit.sh;
-                  #sleep infinity;
+                  sleep 500s;
 
 
     Worker:
       replicas: 1
       template:
         spec:
-          serviceAccountName: yourusername
+          serviceAccountName: javierhn
           volumes:
             - name: mydir
               hostPath:
-                path: /home/yourusername/models/voyager/vit_pt/1.15.1
+                path: /home/javierhn/models/voyager/vit_pt/1.21.4
                 type: Directory
             - name: scratch
               emptyDir: {}
             - name: dataset
               hostPath:
-                path: /voyager/ceph/users/yourusername/datasets/imagenet/ILSVRC2012
+                path: /voyager/ceph/users/javierhn/datasets/imagenet/ILSVRC2012
                 type: Directory
             - name: pretrained
               hostPath:
-                path: /voyager/ceph/users/yourusername/datasets/vit_pretrained
+                path: /voyager/ceph/users/javierhn/datasets/vit_pretrained
                 type: Directory
             - name: output
               hostPath:
-                path: /voyager/ceph/users/yourusername/results/vit
+                path: /voyager/ceph/users/javierhn/results/vit
                 type: Directory
           hostIPC: true
           containers:
-            - image: vault.habana.ai/gaudi-docker/1.15.1/ubuntu22.04/habanalabs/pytorch-installer-2.2.0:latest
+            - image: vault.habana.ai/gaudi-docker/1.21.4/ubuntu22.04/habanalabs/pytorch-installer-2.6.0:latest
               name: vit-worker
               imagePullPolicy: Always
               resources:
@@ -116,12 +115,12 @@ spec:
                   habana.ai/gaudi: 8
                   cpu: 95
                   memory: 409Gi
-                  hugepages-2Mi: 95000Mi
+                  hugepages-2Mi: 30000Mi
                 requests:
                   habana.ai/gaudi: 8
                   cpu: 95
                   memory: 409Gi
-                  hugepages-2Mi: 95000Mi
+                  hugepages-2Mi: 30000Mi
               volumeMounts:
                 - name: mydir
                   mountPath: /mydir
@@ -133,4 +132,10 @@ spec:
                   mountPath: /pretrained
                 - name: output
                   mountPath: /output
+              command: ["/bin/bash", "-c"]
+              args:
+                - >-
+                   /usr/bin/ssh-keygen -A;
+                   /usr/sbin/sshd;
+                   sleep 365d;
  
