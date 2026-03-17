@@ -89,7 +89,7 @@ Now that the python code is ready you can use the `mnist_1card.yaml` to launch a
 
 And, to execute the model in Lazy mode you need pass the following flag:
 ```bash
-export HPU_LAZY_MODE = 1
+export PT_HPU_LAZY_MODE=1
 ```
 
  Then, you can launch it with

@@ -1,121 +1,87 @@
-apiVersion: kubeflow.org/v2beta1
-kind: MPIJob
+apiVersion: v1
+kind: Pod
 metadata:
-  name: yourusername-ssd-8cards
+  name: ssd
   namespace: yourusername-restricted
 spec:
-  slotsPerWorker: 8
-  runPolicy:
-    cleanPodPolicy: Running
-  mpiReplicaSpecs:
-    Launcher:
-      replicas: 1
-      template:
-        spec:
-          nodeSelector:
-            brightcomputing.com/node-category: 'compute'
-          serviceAccountName: yourusername
-          volumes:
-            - name: mydir
-              hostPath:
-                path: /home/yourusername/models/voyager/ssd_pt/1.15.1
-                type: Directory
-            - name: scratch
-              emptyDir: {}
-            - name: dataset
-              hostPath:
-                path: /voyager/ceph/users/yourusername/datasets/COCO
-                type: Directory
-            - name: pretrained
-              hostPath:
-                path: /voyager/ceph/users/yourusername/datasets/ssd_pretrained_weights
-                type: Directory
-          hostIPC: true
-          containers:
-            - image: vault.habana.ai/gaudi-docker/1.15.1/ubuntu22.04/habanalabs/pytorch-installer-2.2.0:latest
-              name: ssd-launcher
-              resources:
-                requests:
-                  cpu: 2
-                  memory: 4Gi
-                limits:
-                  cpu: 4
-                  memory: 8Gi
-              volumeMounts:
-                - name: mydir
-                  mountPath: /mydir
-                - name: scratch
-                  mountPath: /scratch
-                - name: dataset
-                  mountPath: /dataset
-                - name: pretrained
-                  mountPath: /pretrained
-              command: ["/bin/bash", "-c"]
-              args:
-                - >-
-                  declare -xr NUM_NODES=1;
+  restartPolicy: Never
+  volumes:
+    - name: scratch
+      emptyDir: {}
+    - name: dataset
+      hostPath:
+        path: /voyager/ceph/users/yourusername/datasets/COCO
+        type: Directory
+    - name: pretrained
+      hostPath:
+        path: /voyager/ceph/users/yourusername/datasets/ssd_pretrained_weights
+        type: Directory
+  hostIPC: true
+  containers:
+    - name: gaudi-container
+      image: vault.habana.ai/gaudi-docker/1.21.4/ubuntu22.04/habanalabs/pytorch-installer-2.6.0:latest
+      volumeMounts:
+        - mountPath: /scratch
+          name: scratch
+        - mountPath: /dataset
+          name: dataset
+        - mountPath: /pretrained
+          name: pretrained
+      resources:
+        limits:
+          memory: 256G
+          cpu: 94
+          habana.ai/gaudi: 8
+          hugepages-2Mi: 30000Mi
+        requests:
+          memory: 256G
+          cpu: 94
+          habana.ai/gaudi: 8
+          hugepages-2Mi: 30000Mi
+          #env:
+          #- name: dataset
+          #value: "/ceph/datasets/bloom/checkpoints"
+      command: ["/bin/sh","-c"]
+      args:
+        - >-
+           hl-smi;
+           export HOME=/scratch/tmp;
+           export PATH=/scratch/tmp/.local/bin:$PATH;
 
-                  declare -xr RUN_PATH=/mydir;
-                  declare -xr SYNAPSE_AI_VER=1.15.1;
-                  declare -xr MODEL_ROOT=/scratch/Model-References;
-                  declare -xr MODEL_PATH=$MODEL_ROOT/PyTorch/computer_vision/detection/mlcommons/SSD;
-                  sleep 15s;
+           export PYTHONPATH=/scratch/Model-References:$PYTHONPATH;
 
-                  mpirun  --npernode 1 \
-                    --tag-output \
+           mkdir -p /scratch/tmp/;
+           cd /scratch;
+           export N_CARDS=8;
+           git clone -b 1.19.0 https://github.com/HabanaAI/Model-References;
+
+           cd Model-References/PyTorch/computer_vision/detection/mlcommons/SSD;
+           pip install -r requirements.txt;
+
+           export PT_HPU_LAZY_MODE=1;
+
+           export CMD="python ssd/train.py \
+                  --batch-size 128 \
+                  --num-workers 12 \
+                  --epochs 50 \
+                  --log-interval 100 \
+                  --val-interval 5 \
+                  --data /dataset \
+                  --pretrained-backbone /pretrained/resnet34-333f7ec4.pth \
+                  --use-hpu \
+                  --hpu-lazy-mode \
+                  --autocast";
+
+           mpirun -n ${N_CARDS} \
                     --allow-run-as-root \
-                    --prefix $MPI_ROOT \
-                    -x MODEL_PATH \
-                    -x SYNAPSE_AI_VER \
-                    $RUN_PATH/setup.sh;
+                    --bind-to core \
+                    --map-by ppr:4:socket:PE=6 \
+                    -rank-by core --report-bindings \
+                    --tag-output \
+                    --merge-stderr-to-stdout \
+                    -x PYTHONPATH \
+                    -x PT_HPU_LAZY_MODE \
+                    $CMD;
 
-                  $RUN_PATH/run_ssd.sh;
-                  #sleep infinity;
 
 
-    Worker:
-      replicas: 1
-      template:
-        spec:
-          serviceAccountName: yourusername
-          volumes:
-            - name: mydir
-              hostPath:
-                path: /home/yourusername/models/voyager/ssd_pt/1.15.1
-                type: Directory
-            - name: scratch
-              emptyDir: {}
-            - name: dataset
-              hostPath:
-                path: /voyager/ceph/users/yourusername/datasets/COCO
-                type: Directory
-            - name: pretrained
-              hostPath:
-                path: /voyager/ceph/users/yourusername/datasets/vit_pretrained
-                type: Directory
-          hostIPC: true
-          containers:
-            - image: vault.habana.ai/gaudi-docker/1.15.1/ubuntu22.04/habanalabs/pytorch-installer-2.2.0:latest
-              name: ssd-worker
-              imagePullPolicy: Always
-              resources:
-                limits:
-                  habana.ai/gaudi: 8
-                  cpu: 95
-                  memory: 409Gi
-                  hugepages-2Mi: 95000Mi
-                requests:
-                  habana.ai/gaudi: 8
-                  cpu: 95
-                  memory: 409Gi
-                  hugepages-2Mi: 95000Mi
-              volumeMounts:
-                - name: mydir
-                  mountPath: /mydir
-                - name: scratch
-                  mountPath: /scratch
-                - name: dataset
-                  mountPath: /dataset
-                - name: pretrained
-                  mountPath: /pretrained
- 

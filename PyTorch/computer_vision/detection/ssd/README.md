@@ -3,7 +3,7 @@ Here we provide the yaml files and instructions to train SSD model on Voyager.
 
 ## Overview
 
-The model is supported by Intel-Habana. More details can be found in their [repository](https://github.com/HabanaAI/Model-References/tree/1.13.0/PyTorch/computer_vision/detection/mlcommons/SSD/ssd). This tutorial uses SynapseAI v1.15.1.
+The model is supported by Intel-Habana. More details can be found in their [repository](https://github.com/HabanaAI/Model-References/tree/1.13.0/PyTorch/computer_vision/detection/mlcommons/SSD/ssd). This tutorial uses SynapseAI v1.21.4 but uses last SSD version (1.19) supported by Intel-Gaudi.
 
 
 Single Shot MultiBox Detector (SSD) is an object detection network. For an input image, the network outputs a set of bounding boxes around the detected objects, along with their classes.
@@ -49,14 +49,13 @@ Single Gaudi cards have not enough memory to run the model so it needs to be run
 
 **Run training on 8 HPUs:**
 
-To run on multiple cards we launch an MPI job with three files: `ssd_8cards.yaml`, `setup.sh` and `run_ssd.sh`. Some variables in the `ssd_8cards.yaml` need to be modified to your own configuration:
+To run on multiple cards we launch a pod with an mpirun: `ssd_8cards.yaml`. Some variables in the `ssd_8cards.yaml` need to be modified to your own configuration:
 - `mydir`: The location where you keep those three files.
 - `dataset`: The location of your dataset.
 - (Optional) `pretrained`: If you are loading the pretrained backbone manually.  
 
-Remember to change them in the launcher **and** worker.
 
-Neither `setup.sh` or `run_ssd.sh` need to be modified. Once the MPI job is launched, the `run_ssd.sh` will execute the following:
+Once the pod is launched, the `run_ssd.sh` will execute the following:
 ```bash
 python $MODEL_PATH/ssd/train.py \
         -d /dataset \
